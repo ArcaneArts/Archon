@@ -1,4 +1,4 @@
-package dev.cyberpwn.archon.server;
+package art.arcane.archon.server;
 
 public interface ArchonConnection
 {

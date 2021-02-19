@@ -1,4 +1,4 @@
-package dev.cyberpwn.archon.configuration;
+package art.arcane.archon.configuration;
 
 public class ArchonSQLConfiguration
 {

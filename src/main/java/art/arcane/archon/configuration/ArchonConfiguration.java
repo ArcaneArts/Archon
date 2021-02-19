@@ -1,7 +1,6 @@
-package dev.cyberpwn.archon.configuration;
+package art.arcane.archon.configuration;
 
 import com.google.gson.Gson;
-import lombok.Data;
 import lombok.Getter;
 import ninja.bytecode.shuriken.collections.KList;
 import ninja.bytecode.shuriken.io.IO;
