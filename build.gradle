@@ -14,15 +14,13 @@ String chimeraMainClass = "art.arcane.archon.Archon";
 
 repositories {
     mavenCentral()
-    maven {
-        url = "http://repo.volmit.com/repository/volmit/"
-    }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-    implementation 'ninja.bytecode.shuriken:shuriken-core:2.1.19'
+    implementation 'com.github.ArcaneArts:Quill:1.0'
     compileOnly 'org.projectlombok:lombok:1.18.12'
     annotationProcessor 'org.projectlombok:lombok:1.18.12'
     implementation 'org.slf4j:slf4j-api:1.7.22'

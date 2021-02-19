@@ -1,5 +1,8 @@
 package art.arcane.archon.configuration;
 
+import lombok.Data;
+
+@Data
 public class ArchonSQLConfiguration
 {
     private String database = "adatabase";

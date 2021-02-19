@@ -1,23 +1,20 @@
 package art.arcane.archon.configuration;
 
+import art.arcane.quill.collections.KList;
+import art.arcane.quill.io.IO;
+import art.arcane.quill.json.JSONObject;
+import art.arcane.quill.logging.L;
 import com.google.gson.Gson;
+import lombok.Data;
 import lombok.Getter;
-import ninja.bytecode.shuriken.collections.KList;
-import ninja.bytecode.shuriken.io.IO;
-import ninja.bytecode.shuriken.json.JSONObject;
-import ninja.bytecode.shuriken.logging.L;
 
 import java.io.File;
 
+@Data
 public class ArchonConfiguration
 {
-    @Getter
     private int socketPort = 28435;
-
-    @Getter
     private KList<ArchonSQLConfiguration> sqlConnections = KList.from(new ArchonSQLConfiguration());
-
-    @Getter
     private KList<ArchonRedisConfiguration> redisConnections = KList.from(new ArchonRedisConfiguration());
     private static ArchonConfiguration config;
 
