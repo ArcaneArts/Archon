@@ -11,6 +11,7 @@ import art.arcane.quill.execution.parallel.MultiBurst;
 import art.arcane.quill.logging.L;
 
 public class ArchonServer {
+    private static ArchonServer instance;
     private RoundRobin<ArchonSQLConnection> readOnlySQLConnections;
     private RoundRobin<ArchonSQLConnection> writeSQLConnections;
     private RoundRobin<ArchonRedisConnection> redisConnections;
@@ -18,6 +19,7 @@ public class ArchonServer {
 
     public ArchonServer()
     {
+        instance = this;
         L.i("Starting Archon Server");
         MultiBurst.burst.burst(
             this::initSQLConnections,
@@ -25,17 +27,35 @@ public class ArchonServer {
         );
         edict = new Edict(this);
         L.flush();
-        L.i("====================================");
+        L.i("============== Archon ==============");
         L.i("SQL: ");
         L.i("  Writers: ");
         writeSQLConnections.list().forEach((i) -> L.i("    " + i.getName()));
         L.i("  Readers: ");
         readOnlySQLConnections.list().forEach((i) -> L.i("    " + i.getName()));
-        L.i("Redis: ");
-        redisConnections.list().forEach((i) -> L.i("  " + i.getName()));
+        L.i("  Caches: ");
+        redisConnections.list().forEach((i) -> L.i("    " + i.getName()));
         L.flush();
         L.i("====================================");
         L.flush();
+    }
+
+    public static ArchonServer get()
+    {
+        if(instance == null)
+        {
+            instance = new ArchonServer();
+        }
+
+        return instance;
+    }
+
+    public void shutdown()
+    {
+        MultiBurst.burst.burst(
+                () -> redisConnections.list().forEach(ArchonConnection::disconnect),
+                () -> writeSQLConnections.list().forEach(ArchonConnection::disconnect),
+                () -> readOnlySQLConnections.list().forEach(ArchonConnection::disconnect));
     }
 
     public Edict access()

@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'art.arcane'
-version '1.0'
+version '1.0.0'
 String archiveName = "Archon-" + rootProject.version + ".jar"
 String archivePath = jar.archiveFile.get().getAsFile().getParentFile().getAbsolutePath()
 String archiveFilePath = archivePath + "\\" + archiveName

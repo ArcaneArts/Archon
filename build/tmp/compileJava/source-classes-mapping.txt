@@ -26,10 +26,10 @@ art/arcane/archon/server/ArchonRedisConnection.java
  art.arcane.archon.server.ArchonRedisConnection
 art/arcane/archon/element/ElementUtil.java
  art.arcane.archon.element.ElementUtil
-art/arcane/archon/server/Edict.java
- art.arcane.archon.server.Edict
 art/arcane/archon/configuration/ArchonConfiguration.java
  art.arcane.archon.configuration.ArchonConfiguration
+art/arcane/archon/server/Edict.java
+ art.arcane.archon.server.Edict
 art/arcane/archon/Archon.java
  art.arcane.archon.Archon
 art/arcane/archon/server/ArchonServer.java
