@@ -1,0 +1,20 @@
+{
+    "redisConnections": [{
+        "database": 0,
+        "password": "apassword",
+        "address": "localhost",
+        "port": 6379,
+        "usePassword": false
+    }],
+    "sqlConnections": [{
+        "database": "archon",
+        "password": "archon",
+        "address": "localhost",
+        "driver": "com.mysql.cj.jdbc.Driver",
+        "port": 3306,
+        "readOnly": false,
+        "username": "archon",
+        "usesPassword": true
+    }],
+    "socketPort": 28435
+}
