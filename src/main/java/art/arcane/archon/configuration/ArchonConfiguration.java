@@ -29,7 +29,7 @@ public class ArchonConfiguration
 
         try
         {
-            File f = new File("config.json");
+            File f = new File("archon.json");
 
             if(f.exists())
             {
@@ -44,7 +44,7 @@ public class ArchonConfiguration
 
         catch(Throwable e)
         {
-            L.f("There was a problem loading the config.json. Assuming defaults (which wont really work)");
+            L.f("There was a problem loading the archon.json. Assuming defaults (which wont really work)");
             L.ex(e);
         }
 

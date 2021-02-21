@@ -1,11 +1,14 @@
 package art.arcane.archon.server;
 
 import art.arcane.archon.configuration.ArchonSQLConfiguration;
+import art.arcane.archon.data.ArchonResult;
 import art.arcane.quill.execution.J;
+import art.arcane.quill.logging.L;
 import lombok.Getter;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Properties;
 
 public class ArchonSQLConnection implements ArchonConnection {
@@ -50,17 +53,44 @@ public class ArchonSQLConnection implements ArchonConnection {
         }
 
         try {
-            sql = DriverManager.getConnection("jdbc:mysql://" + config.getAddress() + (config.getPort() != 3306 ? (":" + config.getPort()) : "") + "/" + config.getDatabase(), p);
+
+            String url = "jdbc:mysql://" + config.getAddress() + (config.getPort() != 3306 ? (":" + config.getPort()) : "") + "/" + config.getDatabase();
+            L.i("[" + getName() + "]: Connecting to " + url);
+            sql = DriverManager.getConnection(url, p);
 
             if(sql.isValid(5))
             {
+                L.i("[" + getName() + "]: Database Connection Active!");
                 connected = true;
                 return;
             }
-        } catch (Throwable ignored) {
-
+        } catch (Throwable e) {
+            L.f("[" + getName() + "]: Database Connection Failure!");
+            L.ex(e);
         }
 
         disconnect();
+    }
+
+    public ArchonResult query(String query)
+    {
+        try {
+            return new ArchonResult(sql.prepareStatement(query).executeQuery());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public int update(String query)
+    {
+        try {
+            return sql.prepareStatement(query).executeUpdate();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
+        return -1;
     }
 }
