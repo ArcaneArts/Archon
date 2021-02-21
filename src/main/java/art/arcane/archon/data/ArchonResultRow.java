@@ -1,14 +1,21 @@
 package art.arcane.archon.data;
 
 import art.arcane.quill.collections.KList;
+import lombok.Data;
 
 import java.util.function.Consumer;
 
+@Data
 public class ArchonResultRow {
     private final KList<Object> data;
 
     public ArchonResultRow(KList<Object> data){
      this.data = data;
+    }
+
+    public KList<String> toStringList()
+    {
+        return getData().toStringList();
     }
 
     public void forEachCell(Consumer<Object> cellConsumer)

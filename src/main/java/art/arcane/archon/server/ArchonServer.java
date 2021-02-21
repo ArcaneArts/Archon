@@ -38,6 +38,11 @@ public class ArchonServer {
         L.flush();
         L.i("====================================");
         L.flush();
+        test();
+    }
+
+    private void test() {
+        new ExampleTable().sync();
     }
 
     public static ArchonServer get()

@@ -75,7 +75,9 @@ public class ArchonSQLConnection implements ArchonConnection {
     public ArchonResult query(String query)
     {
         try {
-            return new ArchonResult(sql.prepareStatement(query).executeQuery());
+            ArchonResult res = new ArchonResult(sql.prepareStatement(query).executeQuery());
+            L.v("[SQL Query]: " + query + " -> " + res.toJSON());
+            return res;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
@@ -86,7 +88,9 @@ public class ArchonSQLConnection implements ArchonConnection {
     public int update(String query)
     {
         try {
-            return sql.prepareStatement(query).executeUpdate();
+            int v = sql.prepareStatement(query).executeUpdate();
+            L.v("[SQL Update]: " + query + " -> " + v + " rows affected");
+            return v;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }

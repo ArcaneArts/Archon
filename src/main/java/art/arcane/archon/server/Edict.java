@@ -25,6 +25,11 @@ public class Edict
         this.server = server;
     }
 
+    public ArchonResult query(String q)
+    {
+        return server.getReadSQLConnection().query(q);
+    }
+
     public ArchonResult query(String cacheKey, String q)
     {
         if(cl.flip())
@@ -41,7 +46,7 @@ public class Edict
         }
 
         _dbHit++;
-        ArchonResult rr = server.getReadSQLConnection().query(q);
+        ArchonResult rr = query(q);
 
         if(rr != null)
         {
@@ -70,6 +75,11 @@ public class Edict
         return (val + amt);
     }
 
+    public int update(String q)
+    {
+        return server.getWriteSQLConnection().update(q);
+    }
+
     public int update(String cacheKey, String q)
     {
         if(cl.flip())
@@ -78,7 +88,7 @@ public class Edict
         }
 
         MultiBurst.burst.lazy(() -> _invalidations += getServer().getRedisConnection().invalidate(cacheKey));
-        return server.getWriteSQLConnection().update(q);
+        return update(q);
     }
 
     private void updateMetrics() {
