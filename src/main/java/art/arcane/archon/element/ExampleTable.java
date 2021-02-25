@@ -12,6 +12,9 @@ public class ExampleTable extends Element {
     @Type("CHAR(16)")
     private String shortName;
 
+    @Type("CHAR(64)")
+    private String longerName;
+
     @Override
     public String getTableName() {
         return "example";

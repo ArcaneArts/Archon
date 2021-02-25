@@ -80,6 +80,7 @@ public class ArchonSQLConnection implements ArchonConnection {
             return res;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+            L.v("[REQ?]: " + query);
         }
 
         return null;
@@ -93,6 +94,7 @@ public class ArchonSQLConnection implements ArchonConnection {
             return v;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+            L.v("[REQ?]: " + query);
         }
 
         return -1;

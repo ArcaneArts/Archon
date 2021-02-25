@@ -1,27 +1,195 @@
 package art.arcane.archon.element;
 
 import art.arcane.archon.Archon;
+import art.arcane.archon.data.ArchonResult;
 import art.arcane.archon.server.ArchonServer;
 import art.arcane.archon.server.Edict;
 import art.arcane.quill.cache.AtomicCache;
 import art.arcane.quill.collections.KList;
 import art.arcane.quill.collections.KMap;
+import art.arcane.quill.execution.J;
+import art.arcane.quill.execution.parallel.MultiBurst;
 import art.arcane.quill.logging.L;
+import com.google.gson.Gson;
 import lombok.Data;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Data
 public abstract class Element
 {
-    private final KMap<Class<? extends Element>, AtomicCache<KList<ElementField>>> fieldMapping = new KMap<>();
+    private static final Gson gson = new Gson();
+    private static final KMap<Class<? extends Element>, AtomicCache<KList<ElementField>>> fieldMapping = new KMap<>();
+    private transient final AtomicCache<ElementField> primaryKey = new AtomicCache<>();
+    private transient Element snapshot = null;
 
     public abstract String getTableName();
 
-    public boolean sync()
+    public boolean pull()
+    {
+        try
+        {
+            ArchonResult r = Archon.query(getObjectKey() + ":data", "SELECT * FROM `" + getTableName() + "` WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "' LIMIT 1;");
+
+            for(ElementField i : getFieldMapping())
+            {
+                if(!i.isIdentity())
+                {
+                    try
+                    {
+                        ElementUtil.insert(this, i.getField(), r.getRow(0).get(r.getH().indexOf(i.getSqlName())));
+                    }
+
+                    catch(Throwable e)
+                    {
+                        L.ex(e);
+                    }
+                }
+            }
+
+            takeSnapshot();
+
+            return true;
+        }
+
+        catch(Throwable e)
+        {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    private void takeSnapshot()
+    {
+        snapshot = null;
+        MultiBurst.burst.lazy(() -> snapshot = gson.fromJson(gson.toJson(this), getClass()));
+    }
+
+    private void takeSnapshotNow()
+    {
+        snapshot = gson.fromJson(gson.toJson(this), getClass());
+    }
+
+    public void delete()
+    {
+        Archon.update(getObjectKey() + ":*", "DELETE FROM `" + getTableName() + "` WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "' LIMIT 1;");
+    }
+
+    public void push()
+    {
+        if(getPrimaryValue() == null)
+        {
+            return;
+        }
+
+        if(exists())
+        {
+            if(snapshot != null)
+            {
+                KList<ElementField> changed = new KList<>();
+                for(ElementField i : getFieldMapping())
+                {
+                    if(!i.isIdentity())
+                    {
+                        try {
+                            Object s = i.getField().get(snapshot);
+                            Object r = i.getField().get(this);
+
+                            if(!ElementUtil.equals(s, r))
+                            {
+                                changed.add(i);
+                            }
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+                if(changed.isNotEmpty())
+                {
+                    Archon.update(getObjectKey() + ":data", "UPDATE `" + getTableName() + "` SET " + changed.convert((i) -> {
+                        try {
+                            return "`" + i.getSqlName() + "` = '" + ElementUtil.escapeString(i.getField().get(Element.this).toString(), true) + "'";
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        }
+                        return "";
+                    }).toString(", ") + ";");
+
+                    takeSnapshot();
+                    return;
+                }
+            }
+
+            Archon.update(getObjectKey() + ":data", "UPDATE `" + getTableName() + "` SET " + getFieldMapping().convert((i) -> {
+                try {
+                    return "`" + i.getSqlName() + "` = '" + ElementUtil.escapeString(i.getField().get(Element.this).toString(), true) + "'";
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+                return "";
+            }).toString(", ") + ";");
+        }
+
+        else
+        {
+            Archon.update(getObjectKey() + ":exists", "INSERT INTO `" + getTableName() + "` (" + getFieldMapping().convert(ElementField::getSqlName).toString(", ") + ") VALUES (" + getFieldMapping().convert((i) -> {
+                try {
+                    return "'" + ElementUtil.escapeString(i.getField().get(Element.this).toString(), true) + "'";
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+                return "";
+            }).toString(", ") + ");");
+        }
+
+        takeSnapshot();
+    }
+
+    public String getObjectKey()
+    {
+        return getTableName() + ":" + getPrimaryField().getSqlName() + ":" + getPrimaryValue();
+    }
+
+    public boolean exists()
+    {
+        if(getPrimaryValue() == null)
+        {
+            return false;
+        }
+
+        return Archon.query(getObjectKey() + ":exists", "SELECT COUNT(1) FROM `" + getTableName() + "` WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "';").getRow(0).getInt(0) > 0;
+    }
+
+    public String getPrimaryValue()
+    {
+        try {
+            return getPrimaryField().getField().get(this).toString();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public ElementField getPrimaryField()
+    {
+        return primaryKey.aquire(() -> {
+            for(ElementField i : getFieldMapping())
+            {
+                if(i.isIdentity())
+                {
+                    return i;
+                }
+            }
+
+            return null;
+        });
+    }
+
+    public void sync()
     {
         if(!createTable())
         {
@@ -70,8 +238,6 @@ public abstract class Element
                 Archon.update("ALTER TABLE `" + getTableName() + "` " + alt.toString(", ") + ";");
             }
         }
-
-        return true;
     }
 
     public long tableSize()
@@ -140,6 +306,7 @@ public abstract class Element
 
             for(Field i : baseClass.getDeclaredFields())
             {
+                i.setAccessible(true);
                 if(Modifier.isTransient(i.getModifiers()) || Modifier.isStatic(i.getModifiers()))
                 {
                     continue;

@@ -26,9 +26,14 @@ public class Archon
         return ArchonServer.get().access().update(query);
     }
 
+    public static void invalidate(String s) {
+        ArchonServer.get().getRedisConnection().invalidate(s);
+    }
+
     public static void main(String[] a)
     {
         new ArchonServer();
+        ArchonServer.get().shutdown();
         L.flush();
         System.exit(0);
     }

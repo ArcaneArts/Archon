@@ -15,7 +15,7 @@ public class ID {
 
     public ID()
     {
-        this(new RNG().s(LENGTH));
+        this(new RNG().sSafe(LENGTH));
     }
 
     public String toString()

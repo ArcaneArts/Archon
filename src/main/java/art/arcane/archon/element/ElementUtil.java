@@ -3,6 +3,9 @@ package art.arcane.archon.element;
 import art.arcane.quill.logging.L;
 
 import java.lang.reflect.Field;
+import java.sql.Date;
+import java.util.Objects;
+import java.util.UUID;
 
 public class ElementUtil {
     public static String getSQLType(Field i) {
@@ -105,6 +108,7 @@ public class ElementUtil {
             if(Character.isUpperCase(i))
             {
                 sb.append("_").append(Character.toLowerCase(i));
+                continue;
             }
 
             sb.append(i);
@@ -204,5 +208,66 @@ public class ElementUtil {
         }
 
         return sBuilder.toString();
+    }
+
+    public static void insert(Object object, Field i, Object o) throws IllegalAccessException {
+        if(i.getType().equals(UUID.class))
+        {
+            i.set(object, UUID.fromString(o.toString()));
+        }
+
+        if(i.getType().equals(ID.class))
+        {
+            i.set(object, new ID(o.toString()));
+        }
+
+        else if(i.getType().equals(String.class))
+        {
+            i.set(object, o.toString());
+        }
+
+        else if(i.getType().equals(Byte.class) || i.getType().equals(byte.class))
+        {
+            i.set(object, Byte.valueOf(o.toString()));
+        }
+
+        else if(i.getType().equals(Integer.class) || i.getType().equals(int.class))
+        {
+            i.set(object, Integer.valueOf(o.toString()));
+        }
+
+        else if(i.getType().equals(Double.class) || i.getType().equals(double.class))
+        {
+            i.set(object, Double.valueOf(o.toString()));
+        }
+
+        else if(i.getType().equals(Long.class) || i.getType().equals(long.class))
+        {
+            i.set(object, Long.valueOf(o.toString()));
+        }
+
+        else if(i.getType().equals(Boolean.class) || i.getType().equals(boolean.class))
+        {
+            i.set(object, Integer.parseInt(o.toString()) == 1);
+        }
+
+        else
+        {
+            System.out.println("Cannot handle type injection from table: " + i.getType().toString());
+        }
+    }
+
+    public static boolean equals(Object s, Object r) {
+        if((s == null) != (r == null))
+        {
+            return false;
+        }
+
+        if(s == null)
+        {
+            return false;
+        }
+
+        return Objects.equals(s, r);
     }
 }

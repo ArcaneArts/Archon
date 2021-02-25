@@ -2,7 +2,9 @@ package art.arcane.archon.server;
 
 import art.arcane.archon.data.ArchonResult;
 import art.arcane.quill.execution.ChronoLatch;
+import art.arcane.quill.execution.J;
 import art.arcane.quill.execution.parallel.MultiBurst;
+import art.arcane.quill.logging.L;
 import lombok.Data;
 import redis.clients.jedis.Jedis;
 
@@ -34,7 +36,7 @@ public class Edict
     {
         if(cl.flip())
         {
-            MultiBurst.burst.lazy(this::updateMetrics);
+            J.a(this::updateMetrics);
         }
 
         ArchonResult r = getServer().getRedisConnection().getCachedQuery(cacheKey);
@@ -50,7 +52,7 @@ public class Edict
 
         if(rr != null)
         {
-            MultiBurst.burst.lazy(() -> getServer().getRedisConnection().cacheQuery(cacheKey, rr));
+            J.a(() -> getServer().getRedisConnection().cacheQuery(cacheKey, rr));
             _cacheWrites++;
         }
 
@@ -58,12 +60,13 @@ public class Edict
     }
 
     private long increment(String v, long amt)
-    {Jedis r = getServer().getRedisConnection().getJedis();
+    {
+        ArchonRedisConnection c = getServer().getRedisConnection();
         long val = 0;
 
         try
         {
-            val = Long.parseLong(r.get("archon:metrics:" + v));
+            val = Long.parseLong(c.get("archon:metrics:" + v));
         }
 
         catch(Throwable ignored)
@@ -71,7 +74,7 @@ public class Edict
 
         }
 
-        r.set("archon:metrics:" + v, "" + (val + amt));
+        c.set("archon:metrics:" + v, "" + (val + amt));
         return (val + amt);
     }
 
@@ -84,29 +87,33 @@ public class Edict
     {
         if(cl.flip())
         {
-            MultiBurst.burst.lazy(this::updateMetrics);
+            J.a(this::updateMetrics);
         }
 
-        MultiBurst.burst.lazy(() -> _invalidations += getServer().getRedisConnection().invalidate(cacheKey));
+        J.a(() -> _invalidations += getServer().getRedisConnection().invalidate(cacheKey));
         return update(q);
     }
 
     private void updateMetrics() {
-        MultiBurst.burst.lazy(() -> {
+        J.a(() -> {
             cacheHit = increment("cachehit", _cacheHit);
             _cacheHit = 0;
         });
-        MultiBurst.burst.lazy(() -> {
+        J.a(() -> {
             cacheWrites = increment("cachewrite", _cacheWrites);
             _cacheWrites = 0;
         });
-        MultiBurst.burst.lazy(() -> {
+        J.a(() -> {
             dbHit = increment("dbhit", _dbHit);
             _dbHit = 0;
         });
-        MultiBurst.burst.lazy(() -> {
+        J.a(() -> {
             invalidations = increment("invalidations", _invalidations);
             _invalidations = 0;
         });
+    }
+
+    public void shutdown() {
+        updateMetrics();
     }
 }

@@ -4,8 +4,10 @@ import art.arcane.archon.configuration.ArchonConfiguration;
 import art.arcane.archon.configuration.ArchonRedisConfiguration;
 import art.arcane.archon.configuration.ArchonSQLConfiguration;
 import art.arcane.archon.element.ExampleTable;
+import art.arcane.archon.element.ID;
 import art.arcane.quill.collections.KList;
 import art.arcane.quill.collections.RoundRobin;
+import art.arcane.quill.execution.J;
 import art.arcane.quill.execution.parallel.BurstExecutor;
 import art.arcane.quill.execution.parallel.MultiBurst;
 import art.arcane.quill.logging.L;
@@ -21,10 +23,8 @@ public class ArchonServer {
     {
         instance = this;
         L.i("Starting Archon Server");
-        MultiBurst.burst.burst(
-            this::initSQLConnections,
-            this::initRedisConnections
-        );
+        initSQLConnections();
+        initRedisConnections();
         edict = new Edict(this);
         L.flush();
         L.i("============== Archon ==============");
@@ -43,6 +43,12 @@ public class ArchonServer {
 
     private void test() {
         new ExampleTable().sync();
+
+        ExampleTable t = new ExampleTable();
+        t.setId(new ID());
+        t.setShortName("TestName");
+        t.setLongerName("A Longer Test Name.");
+        t.push();
     }
 
     public static ArchonServer get()
@@ -57,10 +63,11 @@ public class ArchonServer {
 
     public void shutdown()
     {
-        MultiBurst.burst.burst(
-                () -> redisConnections.list().forEach(ArchonConnection::disconnect),
-                () -> writeSQLConnections.list().forEach(ArchonConnection::disconnect),
-                () -> readOnlySQLConnections.list().forEach(ArchonConnection::disconnect));
+        ArchonServer.get().access().shutdown();
+        redisConnections.list().forEach(ArchonConnection::disconnect);
+        writeSQLConnections.list().forEach(ArchonConnection::disconnect);
+        readOnlySQLConnections.list().forEach(ArchonConnection::disconnect);
+        L.i("Archon has Shutdown");
     }
 
     public Edict access()
@@ -87,50 +94,40 @@ public class ArchonServer {
     private void initSQLConnections()
     {
         KList<ArchonSQLConfiguration> conf = ArchonConfiguration.get().getSqlConnections();
-        BurstExecutor e = MultiBurst.burst.burst(conf.size());
         KList<ArchonSQLConnection> readOnly = new KList<>();
         KList<ArchonSQLConnection> write = new KList<>();
         for(ArchonSQLConfiguration i : conf)
         {
             if(i.isReadOnly())
             {
-                e.queue(() -> {
-                    ArchonSQLConnection c = new ArchonSQLConnection(i);
-                    c.connect();
-                    readOnly.add(c);
-                });
+                ArchonSQLConnection c = new ArchonSQLConnection(i);
+                c.connect();
+                readOnly.add(c);
             }
             
             else
             {
-                e.queue(() -> {
-                    ArchonSQLConnection c = new ArchonSQLConnection(i);
-                    c.connect();
-                    write.add(c);
-                });
+                ArchonSQLConnection c = new ArchonSQLConnection(i);
+                c.connect();
+                write.add(c);
             }
         }
         
         writeSQLConnections = write.roundRobin();
         readOnlySQLConnections = readOnly.roundRobin();
-        e.complete();
     }
 
     private void initRedisConnections()
     {
         KList<ArchonRedisConfiguration> conf = ArchonConfiguration.get().getRedisConnections();
-        BurstExecutor e = MultiBurst.burst.burst(conf.size());
         KList<ArchonRedisConnection> redis = new KList<>();
         for(ArchonRedisConfiguration i : conf)
         {
-            e.queue(() -> {
-                ArchonRedisConnection c = new ArchonRedisConnection(i);
-                c.connect();
-                redis.add(c);
-            });
+            ArchonRedisConnection c = new ArchonRedisConnection(i);
+            c.connect();
+            redis.add(c);
         }
 
         redisConnections = redis.roundRobin();
-        e.complete();
     }
 }

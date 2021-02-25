@@ -4,7 +4,7 @@
         "password": "apassword",
         "address": "localhost",
         "port": 6379,
-        "usePassword": false
+        "usePassword": true
     }],
     "sqlConnections": [{
         "database": "archon",

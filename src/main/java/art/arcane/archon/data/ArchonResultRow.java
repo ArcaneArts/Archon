@@ -38,17 +38,17 @@ public class ArchonResultRow {
 
     public int getInt(int v)
     {
-        return (int) get(v);
+        return Integer.parseInt(get(v).toString());
     }
 
     public long getLong(int v)
     {
-        return (long) get(v);
+        return Long.parseLong(get(v).toString());
     }
 
     public double getDouble(int v)
     {
-        return (double) get(v);
+        return Double.parseDouble(get(v).toString());
     }
 
     public boolean getBoolean(int v)
@@ -58,12 +58,12 @@ public class ArchonResultRow {
 
     public byte getByte(int v)
     {
-        return (byte) get(v);
+        return Byte.parseByte(get(v).toString());
     }
 
     public float getFloat(int v)
     {
-        return (float) get(v);
+        return Float.parseFloat(get(v).toString());
     }
 
     public int size()
