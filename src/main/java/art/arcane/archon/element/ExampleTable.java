@@ -7,16 +7,19 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class ExampleTable extends Element {
     @Identity
-    private ID id;
+    private ID id = new ID();
 
-    @Type("CHAR(16)")
-    private String shortName;
-
-    @Type("CHAR(64)")
-    private String longerName;
+    private String astring = "derp";
+    private int anint = 0;
+    private byte abyte = 0;
+    private short ashort = 0;
+    private long along = 0;
+    private float afloat = 0;
+    private double adouble = 0;
+    private boolean aboolean = false;
 
     @Override
     public String getTableName() {
-        return "example";
+        return "example2";
     }
 }

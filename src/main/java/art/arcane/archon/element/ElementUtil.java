@@ -1,13 +1,16 @@
 package art.arcane.archon.element;
 
+import art.arcane.quill.collections.KMap;
 import art.arcane.quill.logging.L;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Date;
 import java.util.Objects;
 import java.util.UUID;
 
 public class ElementUtil {
+    private static final KMap<Class<?>, String> tableNameCache = new KMap<>();
     public static String getSQLType(Field i) {
         Type t = i.getDeclaredAnnotation(Type.class);
 
@@ -269,5 +272,20 @@ public class ElementUtil {
         }
 
         return Objects.equals(s, r);
+    }
+
+    public static String getTableName(Class<?> type) {
+     return tableNameCache.compute(type, (k, v) -> {
+         if(v == null)
+         {
+             try {
+                 return ((Element)type.getConstructor().newInstance()).getTableName();
+             } catch (Throwable e) {
+                 e.printStackTrace();
+             }
+         }
+
+         return v;
+     });
     }
 }

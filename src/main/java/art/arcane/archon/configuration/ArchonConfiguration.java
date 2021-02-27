@@ -15,7 +15,6 @@ public class ArchonConfiguration
 {
     private int socketPort = 28435;
     private KList<ArchonSQLConfiguration> sqlConnections = KList.from(new ArchonSQLConfiguration());
-    private KList<ArchonRedisConfiguration> redisConnections = KList.from(new ArchonRedisConfiguration());
     private static ArchonConfiguration config;
 
     public static ArchonConfiguration get()

@@ -2,6 +2,7 @@ package art.arcane.archon.element;
 
 import art.arcane.archon.Archon;
 import art.arcane.archon.data.ArchonResult;
+import art.arcane.archon.data.ArchonResultRow;
 import art.arcane.archon.server.ArchonServer;
 import art.arcane.archon.server.Edict;
 import art.arcane.quill.cache.AtomicCache;
@@ -19,6 +20,8 @@ import java.lang.reflect.Modifier;
 @Data
 public abstract class Element
 {
+    private static boolean tableExists = false;
+    private transient Boolean exists = null;
     private static final Gson gson = new Gson();
     private static final KMap<Class<? extends Element>, AtomicCache<KList<ElementField>>> fieldMapping = new KMap<>();
     private transient final AtomicCache<ElementField> primaryKey = new AtomicCache<>();
@@ -30,15 +33,55 @@ public abstract class Element
     {
         try
         {
-            ArchonResult r = Archon.query(getObjectKey() + ":data", "SELECT * FROM `" + getTableName() + "` WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "' LIMIT 1;");
+            sync();
+            return pull(Archon.query("SELECT * FROM `" + getTableName() + "` WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "' LIMIT 1;"));
+        }
 
+        catch(Throwable e)
+        {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean pull(ArchonResult r)
+    {
+        try
+        {
+            if(r.size() <= 0)
+            {
+                return false;
+            }
+
+            return pull(r, r.getRow(0));
+        }
+
+        catch(Throwable e)
+        {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean pull(ArchonResult r, ArchonResultRow row)
+    {
+        try
+        {
+            if(r.size() <= 0)
+            {
+                return false;
+            }
+
+            sync();
             for(ElementField i : getFieldMapping())
             {
                 if(!i.isIdentity())
                 {
                     try
                     {
-                        ElementUtil.insert(this, i.getField(), r.getRow(0).get(r.getH().indexOf(i.getSqlName())));
+                        ElementUtil.insert(this, i.getField(), row.get(r.getH().indexOf(i.getSqlName())));
                     }
 
                     catch(Throwable e)
@@ -61,23 +104,12 @@ public abstract class Element
         return false;
     }
 
-    private void takeSnapshot()
-    {
-        snapshot = null;
-        MultiBurst.burst.lazy(() -> snapshot = gson.fromJson(gson.toJson(this), getClass()));
-    }
-
-    private void takeSnapshotNow()
-    {
-        snapshot = gson.fromJson(gson.toJson(this), getClass());
-    }
-
-    public void delete()
-    {
-        Archon.update(getObjectKey() + ":*", "DELETE FROM `" + getTableName() + "` WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "' LIMIT 1;");
-    }
-
     public void push()
+    {
+        push(false);
+    }
+
+    public void push(boolean forcePush)
     {
         if(getPrimaryValue() == null)
         {
@@ -109,43 +141,59 @@ public abstract class Element
 
                 if(changed.isNotEmpty())
                 {
-                    Archon.update(getObjectKey() + ":data", "UPDATE `" + getTableName() + "` SET " + changed.convert((i) -> {
+                    Archon.update("UPDATE `" + getTableName() + "` SET " + changed.convert((i) -> {
                         try {
-                            return "`" + i.getSqlName() + "` = '" + ElementUtil.escapeString(i.getField().get(Element.this).toString(), true) + "'";
+                            return "`" + i.getSqlName() + "` = '" + ElementUtil.escapeString(boolsafe(i.getField().get(Element.this)).toString(), true) + "'";
                         } catch (IllegalAccessException e) {
                             e.printStackTrace();
                         }
                         return "";
-                    }).toString(", ") + ";");
+                    }).toString(", ") + " WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "' LIMIT 1;");
 
                     takeSnapshot();
                     return;
                 }
             }
 
-            Archon.update(getObjectKey() + ":data", "UPDATE `" + getTableName() + "` SET " + getFieldMapping().convert((i) -> {
-                try {
-                    return "`" + i.getSqlName() + "` = '" + ElementUtil.escapeString(i.getField().get(Element.this).toString(), true) + "'";
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-                return "";
-            }).toString(", ") + ";");
+            if(forcePush)
+            {
+                Archon.update("UPDATE `" + getTableName() + "` SET " + getFieldMapping().convert((i) -> {
+                    try {
+                        return "`" + i.getSqlName() + "` = '" + ElementUtil.escapeString(boolsafe(i.getField().get(Element.this)).toString(), true) + "'";
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                    return "";
+                }).toString(", ") + " WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "' LIMIT 1;");
+            }
         }
 
         else
         {
-            Archon.update(getObjectKey() + ":exists", "INSERT INTO `" + getTableName() + "` (" + getFieldMapping().convert(ElementField::getSqlName).toString(", ") + ") VALUES (" + getFieldMapping().convert((i) -> {
+            Archon.update("INSERT INTO `" + getTableName() + "` (" + getFieldMapping().convert(ElementField::getSqlName).toString(", ") + ") VALUES (" + getFieldMapping().convert((i) -> {
                 try {
-                    return "'" + ElementUtil.escapeString(i.getField().get(Element.this).toString(), true) + "'";
+                    return "'" + ElementUtil.escapeString(boolsafe(i.getField().get(Element.this)).toString(), true) + "'";
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
                 return "";
             }).toString(", ") + ");");
+            exists = true;
         }
 
         takeSnapshot();
+    }
+
+    private void takeSnapshot()
+    {
+        snapshot = gson.fromJson(gson.toJson(this), getClass());
+    }
+
+    public void delete()
+    {
+        sync();
+        Archon.update("DELETE FROM `" + getTableName() + "` WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "' LIMIT 1;");
+        exists = false;
     }
 
     public String getObjectKey()
@@ -160,7 +208,14 @@ public abstract class Element
             return false;
         }
 
-        return Archon.query(getObjectKey() + ":exists", "SELECT COUNT(1) FROM `" + getTableName() + "` WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "';").getRow(0).getInt(0) > 0;
+        if(exists != null)
+        {
+            return exists;
+        }
+
+        sync();
+        exists = Archon.query("SELECT COUNT(1) FROM `" + getTableName() + "` WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "';").getRow(0).getInt(0) > 0;
+        return exists;
     }
 
     public String getPrimaryValue()
@@ -191,6 +246,11 @@ public abstract class Element
 
     public void sync()
     {
+        if(tableExists)
+        {
+            return;
+        }
+
         if(!createTable())
         {
             KList<String> cols = tableColumns();
@@ -198,8 +258,6 @@ public abstract class Element
             KList<ElementField> add = new KList<>();
             KList<String> del = new KList<>();
             KList<String> alt = new KList<>();
-            KMap<String, ElementField> altCols = new KMap<>();
-            StringBuilder query = new StringBuilder();
 
             for(ElementField i : mcols)
             {
@@ -238,10 +296,17 @@ public abstract class Element
                 Archon.update("ALTER TABLE `" + getTableName() + "` " + alt.toString(", ") + ";");
             }
         }
+
+        else
+        {
+            sync();
+            tableExists = true;
+        }
     }
 
     public long tableSize()
     {
+        sync();
         return Archon.query("SELECT COUNT(*) FROM `" + getTableName() + "`")
             .getRow(0)
             .getLong(0);
@@ -283,7 +348,8 @@ public abstract class Element
             }
 
             if (i.getDefaultValue() != null && !i.getSqlType().equalsIgnoreCase("TEXT")) {
-                f.add("`" + i.getSqlName() + "` " + i.getSqlType() + " NOT NULL DEFAULT '" + ElementUtil.escapeString(i.getDefaultValue().toString(), true) + "'");
+                f.add("`" + i.getSqlName() + "` " + i.getSqlType() + " NOT NULL DEFAULT '" + ElementUtil.escapeString((boolsafe(i.getDefaultValue())).toString(), true) + "'");
+
             } else{
                 f.add("`" + i.getSqlName() + "` " + i.getSqlType() + " NOT NULL");
             }
@@ -293,6 +359,20 @@ public abstract class Element
         query.append("(").append(f.toString(", ")).append(")");
         query.append(";");
         return e.update(query.toString()) > 0;
+    }
+
+    private Object boolsafe(Object defaultValue) {
+        if(defaultValue == null)
+        {
+            return null;
+        }
+
+        if(defaultValue instanceof Boolean)
+        {
+            return ((Boolean)defaultValue) ? 1 : 0;
+        }
+
+        return defaultValue;
     }
 
     public KList<ElementField> getFieldMapping()
