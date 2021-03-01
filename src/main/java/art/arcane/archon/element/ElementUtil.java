@@ -6,6 +6,7 @@ import art.arcane.quill.logging.L;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Date;
+import java.sql.Ref;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -77,6 +78,11 @@ public class ElementUtil {
         }
 
         if(c.equals(ID.class))
+        {
+            return "CHAR(" + ID.LENGTH + ")";
+        }
+
+        if(c.equals(Reference.class))
         {
             return "CHAR(" + ID.LENGTH + ")";
         }
@@ -214,6 +220,12 @@ public class ElementUtil {
     }
 
     public static void insert(Object object, Field i, Object o) throws IllegalAccessException {
+        if(i.getType().equals(Reference.class))
+        {
+            Reference<?> r = (Reference<?>) i.get(object);
+            r.setId(new ID(o.toString()));
+        }
+
         if(i.getType().equals(UUID.class))
         {
             i.set(object, UUID.fromString(o.toString()));
@@ -261,6 +273,14 @@ public class ElementUtil {
     }
 
     public static boolean equals(Object s, Object r) {
+        if(s != null && r != null)
+        {
+            if(s.getClass().equals(Reference.class) && r.getClass().equals(Reference.class))
+            {
+                return equals(((Reference<?>) s).getId(), ((Reference<?>) r).getId());
+            }
+        }
+
         if((s == null) != (r == null))
         {
             return false;

@@ -8,12 +8,15 @@ import art.arcane.archon.server.Edict;
 import art.arcane.quill.cache.AtomicCache;
 import art.arcane.quill.collections.KList;
 import art.arcane.quill.collections.KMap;
-import art.arcane.quill.execution.J;
-import art.arcane.quill.execution.parallel.MultiBurst;
 import art.arcane.quill.logging.L;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import lombok.Data;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
@@ -22,7 +25,8 @@ public abstract class Element
 {
     private static boolean tableExists = false;
     private transient Boolean exists = null;
-    private static final Gson gson = new Gson();
+    private static final Gson gson = buildGson();
+
     private static final KMap<Class<? extends Element>, AtomicCache<KList<ElementField>>> fieldMapping = new KMap<>();
     private transient final AtomicCache<ElementField> primaryKey = new AtomicCache<>();
     private transient Element snapshot = null;
@@ -246,6 +250,30 @@ public abstract class Element
 
     public void sync()
     {
+        for(ElementField i : getFieldMapping()) {
+            if (i.isReference()) {
+                Field f = i.getField();
+                f.setAccessible(true);
+
+                try {
+                    Reference<?> o = (Reference<?>) f.get(this);
+
+                    if (o == null) {
+                        L.v("Initialized Reference");
+                        f.set(this, Reference.class.getConstructor(Element.class, Class.class).newInstance(this, f.getDeclaredAnnotation(ReferenceType.class).value()));
+                    }
+
+                    else if(o.getClass() == null || o.getParent() == null)
+                    {
+                        L.v("Repaired Reference");
+                        f.set(this, Reference.class.getConstructor(Element.class, Class.class, ID.class).newInstance(this, f.getDeclaredAnnotation(ReferenceType.class).value(), o.getId()));
+                    }
+                } catch (Throwable e) {
+                    L.ex(e);
+                }
+            }
+        }
+
         if(tableExists)
         {
             return;
@@ -362,9 +390,15 @@ public abstract class Element
     }
 
     private Object boolsafe(Object defaultValue) {
+
         if(defaultValue == null)
         {
             return null;
+        }
+
+        if(defaultValue instanceof Reference)
+        {
+            return ((Reference<?>)defaultValue).getId();
         }
 
         if(defaultValue instanceof Boolean)
@@ -397,6 +431,7 @@ public abstract class Element
                 ef.setName(i.getName());
                 ef.setSqlName(ElementUtil.getSQLName(i.getName()));
                 ef.setField(i);
+                ef.setReference(i.getType().equals(Reference.class) && i.isAnnotationPresent(ReferenceType.class));
                 ef.setIdentity(i.isAnnotationPresent(Identity.class));
                 ef.setSqlType(ElementUtil.getSQLType(i));
                 map.add(ef);
@@ -404,5 +439,23 @@ public abstract class Element
 
             return map;
         });
+    }
+
+
+    private static Gson buildGson() {
+        return new GsonBuilder()
+                .registerTypeHierarchyAdapter(Reference.class, new TypeAdapter<Reference<?>>() {
+                    @Override
+                    public void write(JsonWriter out, Reference<?> value) throws IOException {
+                        out.value(value.getId().toString());
+                    }
+
+                    @Override
+                    public Reference<?> read(JsonReader in) throws IOException {
+                        return new Reference<>(null, null, new ID(in.nextString()));
+                    }
+                })
+
+                .create();
     }
 }

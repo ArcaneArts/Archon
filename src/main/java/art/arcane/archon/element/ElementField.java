@@ -13,4 +13,5 @@ public class ElementField
     private Field field;
     private Object defaultValue;
     private boolean identity;
+    private boolean reference;
 }

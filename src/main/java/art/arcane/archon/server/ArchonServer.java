@@ -36,7 +36,7 @@ public class ArchonServer {
 
     private void test() {
         L.v(">- === TESTS === -<");
-        L.v("Do tests here...");
+        L.v("References!");
         L.v(">- ===  ===  === -<");
     }
 
