@@ -1,18 +1,11 @@
 package art.arcane.archon.element;
 
-import art.arcane.archon.Archon;
 import art.arcane.archon.data.ArchonResult;
+import art.arcane.archon.server.ArchonServiceWorker;
 import art.arcane.quill.cache.AtomicCache;
 import art.arcane.quill.collections.KList;
 import art.arcane.quill.collections.KMap;
-import art.arcane.quill.collections.functional.Function2;
 import lombok.Data;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.Spliterator;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Data
 public abstract class ElementList<T extends Element> {
@@ -20,9 +13,11 @@ public abstract class ElementList<T extends Element> {
     private AtomicCache<Long> count;
     private KMap<Integer, ElementListSegment<T>> segmentCache;
     private int chunkSize;
+    private ArchonServiceWorker archon;
 
-    public ElementList(Class<? extends T> type, int chunkSize)
+    public ElementList(ArchonServiceWorker archon, Class<? extends T> type, int chunkSize)
     {
+        this.archon = archon;
         segmentCache = new KMap<>();
         this.chunkSize = chunkSize;
         this.type = type;
@@ -70,70 +65,70 @@ public abstract class ElementList<T extends Element> {
         return getSublistFor(index).get(index - getBaseIndex(index));
     }
 
-    public static <T extends Element> ElementList<T> whereField(Class<? extends T> type, String where, String fieldResult)
+    public static <T extends Element> ElementList<T> whereField(ArchonServiceWorker archon, Class<? extends T> type, String where, String fieldResult)
     {
-        return new ElementList<T>(type, 128) {
+        return new ElementList<T>(archon, type, 128) {
             @Override
             public ArchonResult getResult(int offset, int limit) {
                 String tn = ElementUtil.getTableName(type);
-                return Archon.query("SELECT `" + fieldResult + "` FROM `" + tn + "` WHERE " + where + " LIMIT " + offset + "," + limit + ";");
+                return getArchon().query("SELECT `" + fieldResult + "` FROM `" + tn + "` WHERE " + where + " LIMIT " + offset + "," + limit + ";");
             }
 
             @Override
             public long getSize() {
                 String tn = ElementUtil.getTableName(type);
-                return Archon.query("SELECT COUNT(*) FROM `" + tn + "` WHERE " + where + ";").getRow(0).getLong(0);
+                return getArchon().query("SELECT COUNT(*) FROM `" + tn + "` WHERE " + where + ";").getRow(0).getLong(0);
             }
         };
     }
 
-    public static <T extends Element> ElementList<T> where(Class<? extends T> type, String where)
+    public static <T extends Element> ElementList<T> where(ArchonServiceWorker archon, Class<? extends T> type, String where)
     {
-        return new ElementList<T>(type, 128) {
+        return new ElementList<T>(archon, type, 128) {
             @Override
             public ArchonResult getResult(int offset, int limit) {
                 String tn = ElementUtil.getTableName(type);
-                return Archon.query("SELECT * FROM `" + tn + "` WHERE " + where + " LIMIT " + offset + "," + limit + ";");
+                return getArchon().query("SELECT * FROM `" + tn + "` WHERE " + where + " LIMIT " + offset + "," + limit + ";");
             }
 
             @Override
             public long getSize() {
                 String tn = ElementUtil.getTableName(type);
-                return Archon.query("SELECT COUNT(*) FROM `" + tn + "` WHERE " + where + ";").getRow(0).getLong(0);
+                return getArchon().query("SELECT COUNT(*) FROM `" + tn + "` WHERE " + where + ";").getRow(0).getLong(0);
             }
         };
     }
 
-    public static <T extends Element> ElementList<T> where(Class<? extends T> type, String where, String orderBy, boolean ascending)
+    public static <T extends Element> ElementList<T> where(ArchonServiceWorker archon, Class<? extends T> type, String where, String orderBy, boolean ascending)
     {
-        return new ElementList<T>(type, 128) {
+        return new ElementList<T>(archon, type, 128) {
             @Override
             public ArchonResult getResult(int offset, int limit) {
                 String tn = ElementUtil.getTableName(type);
-                return Archon.query("SELECT * FROM `" + tn + "` WHERE " + where + " ORDER BY `" + orderBy + "` " + (ascending ? "ASC" : "DESC") + " LIMIT " + offset + "," + limit + ";");
+                return getArchon().query("SELECT * FROM `" + tn + "` WHERE " + where + " ORDER BY `" + orderBy + "` " + (ascending ? "ASC" : "DESC") + " LIMIT " + offset + "," + limit + ";");
             }
 
             @Override
             public long getSize() {
                 String tn = ElementUtil.getTableName(type);
-                return Archon.query("SELECT COUNT(*) FROM `" + tn + "` WHERE " + where + ";").getRow(0).getLong(0);
+                return getArchon().query("SELECT COUNT(*) FROM `" + tn + "` WHERE " + where + ";").getRow(0).getLong(0);
             }
         };
     }
 
-    public static <T extends Element> ElementList<T> whereField(Class<? extends T> type, String where, String fieldResult, String orderBy, boolean ascending)
+    public static <T extends Element> ElementList<T> whereField(ArchonServiceWorker archon, Class<? extends T> type, String where, String fieldResult, String orderBy, boolean ascending)
     {
-        return new ElementList<T>(type, 128) {
+        return new ElementList<T>(archon, type, 128) {
             @Override
             public ArchonResult getResult(int offset, int limit) {
                 String tn = ElementUtil.getTableName(type);
-                return Archon.query("SELECT `" + fieldResult + "` FROM `" + tn + "` WHERE " + where + " ORDER BY `" + orderBy + "` " + (ascending ? "ASC" : "DESC") + " LIMIT " + offset + "," + limit + ";");
+                return getArchon().query("SELECT `" + fieldResult + "` FROM `" + tn + "` WHERE " + where + " ORDER BY `" + orderBy + "` " + (ascending ? "ASC" : "DESC") + " LIMIT " + offset + "," + limit + ";");
             }
 
             @Override
             public long getSize() {
                 String tn = ElementUtil.getTableName(type);
-                return Archon.query("SELECT COUNT(*) FROM `" + tn + "` WHERE " + where + ";").getRow(0).getLong(0);
+                return getArchon().query("SELECT COUNT(*) FROM `" + tn + "` WHERE " + where + ";").getRow(0).getLong(0);
             }
         };
     }

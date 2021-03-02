@@ -6,9 +6,9 @@ import lombok.Data;
 @Data
 public class Edict
 {
-    private final ArchonServer server;
+    private final ArchonServiceWorker server;
 
-    public Edict(ArchonServer server)
+    public Edict(ArchonServiceWorker server)
     {
         this.server = server;
     }

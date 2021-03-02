@@ -1,23 +1,29 @@
 package art.arcane.archon.server;
 
-import art.arcane.archon.configuration.ArchonConfiguration;
 import art.arcane.archon.configuration.ArchonSQLConfiguration;
-import art.arcane.archon.element.*;
+import art.arcane.archon.data.ArchonResult;
 import art.arcane.quill.collections.KList;
 import art.arcane.quill.collections.RoundRobin;
-import art.arcane.quill.format.Form;
 import art.arcane.quill.logging.L;
-import art.arcane.quill.math.Profiler;
+import art.arcane.quill.service.QuillServiceWorker;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-public class ArchonServer {
-    private static ArchonServer instance;
-    private RoundRobin<ArchonSQLConnection> readOnlySQLConnections;
-    private RoundRobin<ArchonSQLConnection> writeSQLConnections;
-    private final Edict edict;
+@EqualsAndHashCode(callSuper = true)
+@Data
+public class ArchonServiceWorker extends QuillServiceWorker {
+    private KList<ArchonSQLConfiguration> sqlConnections = KList.from(new ArchonSQLConfiguration());
+    private transient RoundRobin<ArchonSQLConnection> readOnlySQLConnections;
+    private transient RoundRobin<ArchonSQLConnection> writeSQLConnections;
+    private transient Edict edict;
 
-    public ArchonServer()
+    public ArchonServiceWorker()
     {
-        instance = this;
+
+    }
+
+    @Override
+    public void onEnable() {
         L.i("Starting Archon Server");
         initSQLConnections();
         edict = new Edict(this);
@@ -31,23 +37,21 @@ public class ArchonServer {
         L.flush();
         L.i("====================================");
         L.flush();
-        test();
     }
 
-    private void test() {
-        L.v(">- === TESTS === -<");
-        L.v("References!");
-        L.v(">- ===  ===  === -<");
+    @Override
+    public void onDisable() {
+        shutdown();
     }
 
-    public static ArchonServer get()
+    public ArchonResult query(String query)
     {
-        if(instance == null)
-        {
-            instance = new ArchonServer();
-        }
+        return access().query(query);
+    }
 
-        return instance;
+    public int update(String query)
+    {
+        return access().update(query);
     }
 
     public void shutdown()
@@ -75,7 +79,7 @@ public class ArchonServer {
 
     private void initSQLConnections()
     {
-        KList<ArchonSQLConfiguration> conf = ArchonConfiguration.get().getSqlConnections();
+        KList<ArchonSQLConfiguration> conf = getSqlConnections();
         KList<ArchonSQLConnection> readOnly = new KList<>();
         KList<ArchonSQLConnection> write = new KList<>();
         for(ArchonSQLConfiguration i : conf)
