@@ -1,12 +1,11 @@
 plugins {
     id 'java'
     id 'java-library'
-    id 'maven-publish'
     id 'io.freefair.lombok' version '5.2.1'
 }
 
 group 'art.arcane'
-version '1.0.8'
+version '1.0.9'
 
 repositories {
     mavenCentral()
