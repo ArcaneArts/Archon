@@ -6,6 +6,7 @@ import art.arcane.archon.data.ArchonResultRow;
 import art.arcane.archon.server.ArchonServer;
 import art.arcane.archon.server.Edict;
 import art.arcane.quill.cache.AtomicCache;
+import art.arcane.quill.collections.ID;
 import art.arcane.quill.collections.KList;
 import art.arcane.quill.collections.KMap;
 import art.arcane.quill.logging.L;
@@ -452,7 +453,7 @@ public abstract class Element
 
                     @Override
                     public Reference<?> read(JsonReader in) throws IOException {
-                        return new Reference<>(null, null, new ID(in.nextString()));
+                        return new Reference<>(null, null, ID.fromString(in.nextString()));
                     }
                 })
 

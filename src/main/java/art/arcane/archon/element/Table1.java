@@ -1,5 +1,6 @@
 package art.arcane.archon.element;
 
+import art.arcane.quill.collections.ID;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

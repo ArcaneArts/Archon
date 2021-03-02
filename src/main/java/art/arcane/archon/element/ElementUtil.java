@@ -1,5 +1,6 @@
 package art.arcane.archon.element;
 
+import art.arcane.quill.collections.ID;
 import art.arcane.quill.collections.KMap;
 import art.arcane.quill.logging.L;
 
@@ -223,7 +224,7 @@ public class ElementUtil {
         if(i.getType().equals(Reference.class))
         {
             Reference<?> r = (Reference<?>) i.get(object);
-            r.setId(new ID(o.toString()));
+            r.setId(ID.fromString(o.toString()));
         }
 
         if(i.getType().equals(UUID.class))
@@ -233,7 +234,7 @@ public class ElementUtil {
 
         if(i.getType().equals(ID.class))
         {
-            i.set(object, new ID(o.toString()));
+            i.set(object, ID.fromString(o.toString()));
         }
 
         else if(i.getType().equals(String.class))

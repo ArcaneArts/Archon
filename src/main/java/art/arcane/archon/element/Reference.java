@@ -1,5 +1,6 @@
 package art.arcane.archon.element;
 
+import art.arcane.quill.collections.ID;
 import lombok.Data;
 
 import java.lang.reflect.Field;
@@ -13,14 +14,14 @@ public class Reference<T extends Element> {
     public Reference(Element parent, T t)
     {
         this.parent = parent;
-        id = new ID(t.getPrimaryValue());
+        id = ID.fromString(t.getPrimaryValue());
         type = t.getClass();
     }
 
     public Reference(Element parent,  Class<? extends T> c, ID id)
     {
         this.parent = parent;
-        this.id = new ID(id.toString());
+        this.id = ID.fromString(id.toString());
         type = c;
     }
 
@@ -43,7 +44,7 @@ public class Reference<T extends Element> {
 
     public void set(T t)
     {
-        id = new ID(t.getPrimaryValue());
+        id = ID.fromString(t.getPrimaryValue());
     }
 
     public T get()
@@ -52,7 +53,7 @@ public class Reference<T extends Element> {
             T t = (T) type.getConstructor().newInstance();
             Field f = t.getPrimaryField().getField();
             f.setAccessible(true);
-            f.set(t, new ID(id.toString()));
+            f.set(t, ID.fromString(id.toString()));
             if(t.pull())
             {
                 return t;
