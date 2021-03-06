@@ -21,7 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
 @Data
-public abstract class Element
+public abstract class Element extends Reagent
 {
     private static boolean tableExists = false;
     private transient Boolean exists = null;
