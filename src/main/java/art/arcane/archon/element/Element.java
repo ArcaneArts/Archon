@@ -16,11 +16,13 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 public abstract class Element extends Reagent
 {
