@@ -13,6 +13,8 @@ import java.util.UUID;
 
 public class ElementUtil {
     private static final KMap<Class<?>, String> tableNameCache = new KMap<>();
+    private static final boolean CUSTOM_NAMES = false;
+
     public static String getSQLType(Field i) {
         Type t = i.getDeclaredAnnotation(Type.class);
 
@@ -111,42 +113,48 @@ public class ElementUtil {
 
     public static String getSQLName(String fieldName)
     {
-        StringBuilder sb = new StringBuilder();
+        if(CUSTOM_NAMES) {
+            StringBuilder sb = new StringBuilder();
 
-        for(char i : fieldName.toCharArray())
-        {
-            if(Character.isUpperCase(i))
-            {
-                sb.append("_").append(Character.toLowerCase(i));
-                continue;
+            for (char i : fieldName.toCharArray()) {
+                if (Character.isUpperCase(i)) {
+                    sb.append("_").append(Character.toLowerCase(i));
+                    continue;
+                }
+
+                sb.append(i);
             }
 
-            sb.append(i);
+            return sb.toString();
         }
-
-        return sb.toString();
+        return fieldName;
     }
 
     public static String getFieldName(String sqlName)
     {
-        StringBuilder sb = new StringBuilder();
-        boolean up = false;
-
-        for(char i : sqlName.toCharArray())
+        if(CUSTOM_NAMES)
         {
-            if(i == '_')
+            StringBuilder sb = new StringBuilder();
+            boolean up = false;
+
+            for(char i : sqlName.toCharArray())
             {
-                up = true;
+                if(i == '_')
+                {
+                    up = true;
+                }
+
+                else
+                {
+                    sb.append(up ? Character.toUpperCase(i) : i);
+                    up = false;
+                }
             }
 
-            else
-            {
-                sb.append(up ? Character.toUpperCase(i) : i);
-                up = false;
-            }
+            return sb.toString();
         }
 
-        return sb.toString();
+        return sqlName;
     }
 
     public static String escapeString(String x, boolean escapeDoubleQuotes)

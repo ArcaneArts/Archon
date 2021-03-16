@@ -55,6 +55,23 @@ public abstract class Element extends Reagent
         return false;
     }
 
+    public ID getIdentityWhere(String field, String value)
+    {
+        ArchonResult r = getArchon().getReadSQLConnection().query("SELECT `" + getPrimaryField().getSqlName() + "` WHERE `" + field + "` = '" + value + "' LIMIT 1;");
+
+        if(r.size() > 0)
+        {
+            return ID.fromString(r.getRow(0).getString(0));
+        }
+
+        return null;
+    }
+
+    public boolean where(String field, String value)
+    {
+        return pull(getArchon().getReadSQLConnection().query("SELECT * WHERE `" + field + "` = '" + value + "' LIMIT 1;"));
+    }
+
     public <T extends Element> T archon(ArchonServiceWorker a)
     {
         setArchon(a);
