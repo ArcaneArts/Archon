@@ -1,7 +1,9 @@
 package art.arcane.archon.server;
 
+import art.arcane.archon.Archon;
 import art.arcane.archon.configuration.ArchonSQLConfiguration;
 import art.arcane.archon.data.ArchonResult;
+import art.arcane.quill.Quill;
 import art.arcane.quill.execution.J;
 import art.arcane.quill.logging.L;
 import lombok.Getter;
@@ -51,10 +53,10 @@ public class ArchonSQLConnection implements ArchonConnection {
         {
             p.setProperty("password", config.getPassword());
         }
+        String url = "jdbc:mysql://" + config.getAddress() + (config.getPort() != 3306 ? (":" + config.getPort()) : "") + "/" + config.getDatabase();
 
         try {
 
-            String url = "jdbc:mysql://" + config.getAddress() + (config.getPort() != 3306 ? (":" + config.getPort()) : "") + "/" + config.getDatabase();
             L.i("[" + getName() + "]: Connecting to " + url);
             sql = DriverManager.getConnection(url, p);
 
@@ -67,6 +69,7 @@ public class ArchonSQLConnection implements ArchonConnection {
         } catch (Throwable e) {
             L.f("[" + getName() + "]: Database Connection Failure!");
             L.ex(e);
+            Quill.crashStack("Failed to connect to database: " + url + " (See error above)");
         }
 
         disconnect();
