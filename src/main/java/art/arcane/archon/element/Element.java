@@ -117,17 +117,14 @@ public abstract class Element extends Reagent
             sync();
             for(ElementField i : getFieldMapping())
             {
-                if(!i.isIdentity())
+                try
                 {
-                    try
-                    {
-                        ElementUtil.insert(this, i.getField(), row.get(r.getH().indexOf(i.getSqlName())));
-                    }
+                    ElementUtil.insert(this, i.getField(), row.get(r.getH().indexOf(i.getSqlName())));
+                }
 
-                    catch(Throwable e)
-                    {
-                        L.ex(e);
-                    }
+                catch(Throwable e)
+                {
+                    L.ex(e);
                 }
             }
 
