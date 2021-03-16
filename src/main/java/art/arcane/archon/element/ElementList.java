@@ -26,6 +26,17 @@ public abstract class ElementList<T extends Element> {
 
     public abstract ArchonResult getResult(int offset, int limit);
 
+    public KList<T> toList()
+    {
+        KList<T> v = new KList<>();
+        for(int i = 0; i < size(); i++)
+        {
+            v.add(get(i));
+        }
+
+        return v;
+    }
+
     public int getBaseIndex(int index)
     {
         return (index / chunkSize) * chunkSize;

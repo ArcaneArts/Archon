@@ -231,6 +231,25 @@ public abstract class Element extends Reagent
         snapshot.setArchon(getArchon());
     }
 
+    public <T extends Element> ElementList<T> allWhere(String where)
+    {
+        enforceArchon();
+        Class<T> c = (Class<T>) getClass();
+        return (ElementList<T>) ElementList.where(getArchon(), getClass(), where);
+    }
+
+    public <T extends Element> ElementList<T> allWhere(String where, String orderBy)
+    {
+        return allWhere(where, orderBy, true);
+    }
+
+    public <T extends Element> ElementList<T> allWhere(String where, String orderBy, boolean ascending)
+    {
+        enforceArchon();
+        Class<T> c = (Class<T>) getClass();
+        return (ElementList<T>) ElementList.where(getArchon(), getClass(), where, orderBy, ascending);
+    }
+
     public boolean delete()
     {enforceArchon();
         sync();
