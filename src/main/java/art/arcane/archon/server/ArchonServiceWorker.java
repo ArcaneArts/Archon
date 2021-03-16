@@ -2,6 +2,7 @@ package art.arcane.archon.server;
 
 import art.arcane.archon.configuration.ArchonSQLConfiguration;
 import art.arcane.archon.data.ArchonResult;
+import art.arcane.quill.Quill;
 import art.arcane.quill.collections.KList;
 import art.arcane.quill.collections.RoundRobin;
 import art.arcane.quill.logging.L;
@@ -22,8 +23,23 @@ public class ArchonServiceWorker extends QuillServiceWorker {
 
     }
 
+    public static void fixClass(Class<?> v)
+    {
+
+    }
+
     @Override
     public void onEnable() {
+        try
+        {
+            fixClass(com.mysql.jdbc.Driver.class);
+        }
+
+        catch(Throwable e)
+        {
+            L.ex(e);
+            Quill.crashStack("Failed to load sql driver...");
+        }
         L.i("Starting Archon Server");
         initSQLConnections();
         edict = new Edict(this);
