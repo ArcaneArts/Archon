@@ -33,6 +33,7 @@ public class ArchonServiceWorker extends QuillServiceWorker {
         try
         {
             fixClass(com.mysql.jdbc.Driver.class);
+            fixClass(com.mysql.cj.conf.url.SingleConnectionUrl.class);
         }
 
         catch(Throwable e)

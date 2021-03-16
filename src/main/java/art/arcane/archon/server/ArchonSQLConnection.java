@@ -53,7 +53,8 @@ public class ArchonSQLConnection implements ArchonConnection {
         {
             p.setProperty("password", config.getPassword());
         }
-        String url = "jdbc:mysql://" + config.getAddress() + (config.getPort() != 3306 ? (":" + config.getPort()) : "") + "/" + config.getDatabase();
+        
+        String url = "jdbc:mysql://" + config.getAddress() +  (":" + config.getPort()) + "/" + config.getDatabase();
 
         try {
 
