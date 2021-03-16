@@ -1,5 +1,6 @@
 package art.arcane.archon.element;
 
+import art.arcane.archon.Archon;
 import art.arcane.archon.data.ArchonResult;
 import art.arcane.archon.data.ArchonResultRow;
 import art.arcane.archon.server.ArchonServiceWorker;
@@ -52,6 +53,12 @@ public abstract class Element extends Reagent
         }
 
         return false;
+    }
+
+    public <T extends Element> T archon(ArchonServiceWorker a)
+    {
+        setArchon(a);
+        return (T) this;
     }
 
     private void enforceArchon()
