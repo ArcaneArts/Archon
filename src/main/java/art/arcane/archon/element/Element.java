@@ -1,9 +1,8 @@
 package art.arcane.archon.element;
 
-import art.arcane.archon.Archon;
 import art.arcane.archon.data.ArchonResult;
 import art.arcane.archon.data.ArchonResultRow;
-import art.arcane.archon.server.ArchonServiceWorker;
+import art.arcane.archon.server.ArchonService;
 import art.arcane.archon.server.Edict;
 import art.arcane.cauldron.Reagent;
 import art.arcane.quill.cache.AtomicCache;
@@ -30,7 +29,7 @@ public abstract class Element extends Reagent
     private static boolean tableExists = false;
     private transient Boolean exists = null;
     private static final Gson gson = buildGson();
-    private transient ArchonServiceWorker archon;
+    private transient ArchonService archon;
     private static final KMap<Class<? extends Element>, AtomicCache<KList<ElementField>>> fieldMapping = new KMap<>();
     private transient final AtomicCache<ElementField> primaryKey = new AtomicCache<>();
     private transient Element snapshot = null;
@@ -72,7 +71,7 @@ public abstract class Element extends Reagent
         return pull(getArchon().getReadSQLConnection().query("SELECT * WHERE `" + field + "` = '" + value + "' LIMIT 1;"));
     }
 
-    public <T extends Element> T archon(ArchonServiceWorker a)
+    public <T extends Element> T archon(ArchonService a)
     {
         setArchon(a);
         return (T) this;

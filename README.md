@@ -18,7 +18,7 @@ You need to use a [Quill Service](https://github.com/ArcaneArts/Quill#standalone
 ```java
 import art.arcane.quill.Quill;
 import art.arcane.quill.logging.L;
-import art.arcane.archon.server.ArchonServiceWorker;
+import art.arcane.archon.server.ArchonService;
 
 public class TestService extends QuillService
 {

@@ -6,19 +6,19 @@ import art.arcane.quill.Quill;
 import art.arcane.quill.collections.KList;
 import art.arcane.quill.collections.RoundRobin;
 import art.arcane.quill.logging.L;
-import art.arcane.quill.service.QuillServiceWorker;
+import art.arcane.quill.service.QuillService;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class ArchonServiceWorker extends QuillServiceWorker {
-    private KList<ArchonSQLConfiguration> sqlConnections = KList.from(new ArchonSQLConfiguration());
+public class ArchonService extends QuillService {
+    private KList<ArchonSQLConfiguration> connections = KList.from(new ArchonSQLConfiguration());
     private transient RoundRobin<ArchonSQLConnection> readOnlySQLConnections;
     private transient RoundRobin<ArchonSQLConnection> writeSQLConnections;
     private transient Edict edict;
 
-    public ArchonServiceWorker()
+    public ArchonService()
     {
 
     }
@@ -110,7 +110,7 @@ public class ArchonServiceWorker extends QuillServiceWorker {
 
     private void initSQLConnections()
     {
-        KList<ArchonSQLConfiguration> conf = getSqlConnections();
+        KList<ArchonSQLConfiguration> conf = getConnections();
         KList<ArchonSQLConnection> readOnly = new KList<>();
         KList<ArchonSQLConnection> write = new KList<>();
         for(ArchonSQLConfiguration i : conf)

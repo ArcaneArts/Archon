@@ -1,7 +1,7 @@
 package art.arcane.archon.element;
 
 import art.arcane.archon.data.ArchonResult;
-import art.arcane.archon.server.ArchonServiceWorker;
+import art.arcane.archon.server.ArchonService;
 import art.arcane.quill.cache.AtomicCache;
 import art.arcane.quill.collections.KList;
 import art.arcane.quill.collections.KMap;
@@ -13,9 +13,9 @@ public abstract class ElementList<T extends Element> {
     private AtomicCache<Long> count;
     private KMap<Integer, ElementListSegment<T>> segmentCache;
     private int chunkSize;
-    private ArchonServiceWorker archon;
+    private ArchonService archon;
 
-    public ElementList(ArchonServiceWorker archon, Class<? extends T> type, int chunkSize)
+    public ElementList(ArchonService archon, Class<? extends T> type, int chunkSize)
     {
         this.archon = archon;
         segmentCache = new KMap<>();
@@ -76,7 +76,7 @@ public abstract class ElementList<T extends Element> {
         return getSublistFor(index).get(index - getBaseIndex(index));
     }
 
-    public static <T extends Element> ElementList<T> whereField(ArchonServiceWorker archon, Class<? extends T> type, String where, String fieldResult)
+    public static <T extends Element> ElementList<T> whereField(ArchonService archon, Class<? extends T> type, String where, String fieldResult)
     {
         return new ElementList<T>(archon, type, 128) {
             @Override
@@ -93,7 +93,7 @@ public abstract class ElementList<T extends Element> {
         };
     }
 
-    public static <T extends Element> ElementList<T> where(ArchonServiceWorker archon, Class<? extends T> type, String where)
+    public static <T extends Element> ElementList<T> where(ArchonService archon, Class<? extends T> type, String where)
     {
         return new ElementList<T>(archon, type, 128) {
             @Override
@@ -110,7 +110,7 @@ public abstract class ElementList<T extends Element> {
         };
     }
 
-    public static <T extends Element> ElementList<T> where(ArchonServiceWorker archon, Class<? extends T> type, String where, String orderBy, boolean ascending)
+    public static <T extends Element> ElementList<T> where(ArchonService archon, Class<? extends T> type, String where, String orderBy, boolean ascending)
     {
         return new ElementList<T>(archon, type, 128) {
             @Override
@@ -127,7 +127,7 @@ public abstract class ElementList<T extends Element> {
         };
     }
 
-    public static <T extends Element> ElementList<T> whereField(ArchonServiceWorker archon, Class<? extends T> type, String where, String fieldResult, String orderBy, boolean ascending)
+    public static <T extends Element> ElementList<T> whereField(ArchonService archon, Class<? extends T> type, String where, String fieldResult, String orderBy, boolean ascending)
     {
         return new ElementList<T>(archon, type, 128) {
             @Override

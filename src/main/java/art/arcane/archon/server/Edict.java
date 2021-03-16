@@ -5,14 +5,14 @@ import lombok.Data;
 
 @Data
 public class Edict {
-    private final ArchonServiceWorker server;
+    private final ArchonService server;
 
     public String toString()
     {
         return "Edict";
     }
 
-    public Edict(ArchonServiceWorker server)
+    public Edict(ArchonService server)
     {
         this.server = server;
     }
