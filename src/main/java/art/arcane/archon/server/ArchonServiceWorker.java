@@ -90,6 +90,11 @@ public class ArchonServiceWorker extends QuillServiceWorker {
 
     public Edict access()
     {
+        if(edict == null)
+        {
+            L.w("For some reason Edict is null in the Archon Service Worker. This should work... but this shouldnt even happen in the first place. Trust nothing.");
+            edict = new Edict(this);
+        }
         return edict;
     }
 
