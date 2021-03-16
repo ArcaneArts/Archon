@@ -3,7 +3,6 @@ package art.arcane.archon.server;
 import art.arcane.archon.configuration.ArchonSQLConfiguration;
 import art.arcane.archon.data.ArchonResult;
 import art.arcane.quill.Quill;
-import art.arcane.quill.collections.ID;
 import art.arcane.quill.collections.KList;
 import art.arcane.quill.collections.RoundRobin;
 import art.arcane.quill.logging.L;
@@ -14,8 +13,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class ArchonServiceWorker extends QuillServiceWorker {
-    private static int idx = 0;
-    private int id = idx++;
     private KList<ArchonSQLConfiguration> sqlConnections = KList.from(new ArchonSQLConfiguration());
     private transient RoundRobin<ArchonSQLConnection> readOnlySQLConnections;
     private transient RoundRobin<ArchonSQLConnection> writeSQLConnections;
@@ -51,7 +48,7 @@ public class ArchonServiceWorker extends QuillServiceWorker {
             edict = new Edict(this);
             L.flush();
             L.i("============== Archon ==============");
-            L.i("SQL: [ID: " + id + "]");
+            L.i("SQL: ");
             L.i("  Writers: ");
             writeSQLConnections.list().forEach((i) -> L.i("    " + i.getName()));
             L.i("  Readers: ");
@@ -94,7 +91,7 @@ public class ArchonServiceWorker extends QuillServiceWorker {
     {
         if(edict == null)
         {
-            Quill.crashStack("Non-initialized Service worker! Something with startup is wrong! [ID: " + id + "]");
+            Quill.crashStack("Non-initialized Service worker! Something with startup is wrong!");
         }
 
         return edict;
