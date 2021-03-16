@@ -31,8 +31,6 @@ public class ArchonServiceWorker extends QuillServiceWorker {
 
     @Override
     public void onEnable() {
-        L.f("STARTING ARCHON ID " + new ID().toString() + "...");
-
         try
         {
             fixClass(com.mysql.jdbc.Driver.class);
@@ -66,8 +64,6 @@ public class ArchonServiceWorker extends QuillServiceWorker {
             L.ex(e);
             Quill.crashStack("Failed to start Archon");
         }
-
-        L.i("EDICT " + edict != null );
     }
 
     @Override
