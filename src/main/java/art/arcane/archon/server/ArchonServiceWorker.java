@@ -3,6 +3,7 @@ package art.arcane.archon.server;
 import art.arcane.archon.configuration.ArchonSQLConfiguration;
 import art.arcane.archon.data.ArchonResult;
 import art.arcane.quill.Quill;
+import art.arcane.quill.collections.ID;
 import art.arcane.quill.collections.KList;
 import art.arcane.quill.collections.RoundRobin;
 import art.arcane.quill.logging.L;
@@ -30,6 +31,8 @@ public class ArchonServiceWorker extends QuillServiceWorker {
 
     @Override
     public void onEnable() {
+        L.f("STARTING ARCHON ID " + new ID().toString() + "...");
+
         try
         {
             fixClass(com.mysql.jdbc.Driver.class);
@@ -63,6 +66,8 @@ public class ArchonServiceWorker extends QuillServiceWorker {
             L.ex(e);
             Quill.crashStack("Failed to start Archon");
         }
+
+        L.i("EDICT " + edict != null );
     }
 
     @Override
