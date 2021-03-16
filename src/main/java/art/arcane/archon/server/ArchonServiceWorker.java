@@ -14,6 +14,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class ArchonServiceWorker extends QuillServiceWorker {
+    private static int idx = 0;
+    private int id = idx++;
     private KList<ArchonSQLConfiguration> sqlConnections = KList.from(new ArchonSQLConfiguration());
     private transient RoundRobin<ArchonSQLConnection> readOnlySQLConnections;
     private transient RoundRobin<ArchonSQLConnection> writeSQLConnections;
@@ -49,7 +51,7 @@ public class ArchonServiceWorker extends QuillServiceWorker {
             edict = new Edict(this);
             L.flush();
             L.i("============== Archon ==============");
-            L.i("SQL: ");
+            L.i("SQL: [ID: " + id + "]");
             L.i("  Writers: ");
             writeSQLConnections.list().forEach((i) -> L.i("    " + i.getName()));
             L.i("  Readers: ");
@@ -92,9 +94,9 @@ public class ArchonServiceWorker extends QuillServiceWorker {
     {
         if(edict == null)
         {
-            L.w("For some reason Edict is null in the Archon Service Worker. This should work... but this shouldnt even happen in the first place. Trust nothing.");
-            edict = new Edict(this);
+            Quill.crashStack("Non-initialized Service worker! Something with startup is wrong! [ID: " + id + "]");
         }
+
         return edict;
     }
 
