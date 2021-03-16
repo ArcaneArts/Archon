@@ -41,19 +41,28 @@ public class ArchonServiceWorker extends QuillServiceWorker {
             L.ex(e);
             Quill.crashStack("Failed to load sql driver...");
         }
-        L.i("Starting Archon Server");
-        initSQLConnections();
-        edict = new Edict(this);
-        L.flush();
-        L.i("============== Archon ==============");
-        L.i("SQL: ");
-        L.i("  Writers: ");
-        writeSQLConnections.list().forEach((i) -> L.i("    " + i.getName()));
-        L.i("  Readers: ");
-        readOnlySQLConnections.list().forEach((i) -> L.i("    " + i.getName()));
-        L.flush();
-        L.i("====================================");
-        L.flush();
+        try
+        {
+            L.i("Starting Archon Server");
+            initSQLConnections();
+            edict = new Edict(this);
+            L.flush();
+            L.i("============== Archon ==============");
+            L.i("SQL: ");
+            L.i("  Writers: ");
+            writeSQLConnections.list().forEach((i) -> L.i("    " + i.getName()));
+            L.i("  Readers: ");
+            readOnlySQLConnections.list().forEach((i) -> L.i("    " + i.getName()));
+            L.flush();
+            L.i("====================================");
+            L.flush();
+        }
+
+        catch(Throwable e)
+        {
+            L.ex(e);
+            Quill.crashStack("Failed to start Archon");
+        }
     }
 
     @Override
