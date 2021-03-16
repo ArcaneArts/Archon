@@ -1,12 +1,10 @@
 package art.arcane.archon.server;
 
-import art.arcane.archon.Archon;
 import art.arcane.archon.configuration.ArchonSQLConfiguration;
 import art.arcane.archon.data.ArchonResult;
 import art.arcane.quill.Quill;
 import art.arcane.quill.execution.J;
 import art.arcane.quill.logging.L;
-import lombok.Getter;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -16,14 +14,12 @@ import java.util.Properties;
 public class ArchonSQLConnection implements ArchonConnection {
     private static int creates = 1;
 
-    @Getter
     private final String name;
 
-    @Getter
     private boolean connected;
 
     private Connection sql;
-    private final ArchonSQLConfiguration config;
+    private transient final ArchonSQLConfiguration config;
 
     public ArchonSQLConnection(ArchonSQLConfiguration config)
     {
@@ -53,7 +49,7 @@ public class ArchonSQLConnection implements ArchonConnection {
         {
             p.setProperty("password", config.getPassword());
         }
-        
+
         String url = "jdbc:mysql://" + config.getAddress() +  (":" + config.getPort()) + "/" + config.getDatabase();
 
         try {
@@ -102,5 +98,13 @@ public class ArchonSQLConnection implements ArchonConnection {
         }
 
         return -1;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public boolean isConnected() {
+        return this.connected;
     }
 }
