@@ -231,11 +231,13 @@ public abstract class Element extends Reagent
         snapshot.setArchon(getArchon());
     }
 
-    public void delete()
+    public boolean delete()
     {enforceArchon();
         sync();
-        archon.update("DELETE FROM `" + getTableName() + "` WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "' LIMIT 1;");
+        int c = archon.update("DELETE FROM `" + getTableName() + "` WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "' LIMIT 1;");
         exists = false;
+
+        return c > 0;
     }
 
     public boolean exists()
