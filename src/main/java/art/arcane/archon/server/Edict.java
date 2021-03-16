@@ -4,9 +4,13 @@ import art.arcane.archon.data.ArchonResult;
 import lombok.Data;
 
 @Data
-public class Edict
-{
+public class Edict {
     private final ArchonServiceWorker server;
+
+    public String toString()
+    {
+        return "Edict";
+    }
 
     public Edict(ArchonServiceWorker server)
     {

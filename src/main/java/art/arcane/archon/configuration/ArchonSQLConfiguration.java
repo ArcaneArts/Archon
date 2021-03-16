@@ -13,9 +13,4 @@ public class ArchonSQLConfiguration
     private int port = 3306;
     private boolean readOnly = false;
     private boolean usesPassword = true;
-
-    public String toString()
-    {
-        return database;
-    }
 }
