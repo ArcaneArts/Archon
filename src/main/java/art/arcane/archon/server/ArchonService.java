@@ -3,8 +3,10 @@ package art.arcane.archon.server;
 import art.arcane.archon.Archon;
 import art.arcane.archon.configuration.ArchonSQLConfiguration;
 import art.arcane.archon.data.ArchonResult;
+import art.arcane.archon.element.Element;
 import art.arcane.quill.Quill;
 import art.arcane.quill.collections.KList;
+import art.arcane.quill.collections.KSet;
 import art.arcane.quill.collections.RoundRobin;
 import art.arcane.quill.logging.L;
 import art.arcane.quill.service.QuillService;
@@ -15,6 +17,7 @@ import lombok.EqualsAndHashCode;
 @Data
 public class ArchonService extends QuillService {
     private KList<ArchonSQLConfiguration> connections = KList.from(new ArchonSQLConfiguration());
+    private KSet<Class<? extends Element>> synchronization;
     private transient RoundRobin<ArchonSQLConnection> readOnlySQLConnections;
     private transient RoundRobin<ArchonSQLConnection> writeSQLConnections;
     private transient Edict edict;
@@ -57,6 +60,8 @@ public class ArchonService extends QuillService {
             L.ex(e);
             Quill.crashStack("Failed to start Archon");
         }
+
+
     }
 
     @Override
