@@ -1,5 +1,6 @@
 package art.arcane.archon.element;
 
+import art.arcane.archon.Archon;
 import art.arcane.archon.data.ArchonResult;
 import art.arcane.archon.data.ArchonResultRow;
 import art.arcane.archon.server.ArchonService;
@@ -27,7 +28,7 @@ public abstract class Element
     private static boolean tableExists = false;
     private transient Boolean exists = null;
     private static final Gson gson = buildGson();
-    private transient ArchonService archon;
+    private transient ArchonService archon = Archon.defaultService;
     private static final KMap<Class<? extends Element>, AtomicCache<KList<ElementField>>> fieldMapping = new KMap<>();
     private transient final AtomicCache<ElementField> primaryKey = new AtomicCache<>();
     private transient Element snapshot = null;
