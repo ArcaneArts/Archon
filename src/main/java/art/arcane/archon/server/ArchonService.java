@@ -60,8 +60,6 @@ public class ArchonService extends QuillService {
             L.ex(e);
             Quill.crashStack("Failed to start Archon");
         }
-
-
     }
 
     @Override
