@@ -54,12 +54,10 @@ public class ArchonSQLConnection implements ArchonConnection {
 
         try {
 
-            L.i("[" + getName() + "]: Connecting to " + url);
             sql = DriverManager.getConnection(url, p);
 
             if(sql.isValid(5))
             {
-                L.i("[" + getName() + "]: Database Connection Active!");
                 connected = true;
                 return;
             }
@@ -106,5 +104,9 @@ public class ArchonSQLConnection implements ArchonConnection {
 
     public boolean isConnected() {
         return this.connected;
+    }
+
+    public String getTag() {
+        return getName() + "@" + config.getAddress() + ":" + config.getPort() + "/" + config.getDatabase();
     }
 }

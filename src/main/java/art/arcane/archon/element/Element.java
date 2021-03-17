@@ -4,7 +4,6 @@ import art.arcane.archon.data.ArchonResult;
 import art.arcane.archon.data.ArchonResultRow;
 import art.arcane.archon.server.ArchonService;
 import art.arcane.archon.server.Edict;
-import art.arcane.cauldron.Reagent;
 import art.arcane.quill.cache.AtomicCache;
 import art.arcane.quill.collections.ID;
 import art.arcane.quill.collections.KList;
@@ -22,9 +21,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
-public abstract class Element extends Reagent
+public abstract class Element
 {
     private static boolean tableExists = false;
     private transient Boolean exists = null;

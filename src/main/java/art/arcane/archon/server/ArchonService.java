@@ -1,5 +1,6 @@
 package art.arcane.archon.server;
 
+import art.arcane.archon.Archon;
 import art.arcane.archon.configuration.ArchonSQLConfiguration;
 import art.arcane.archon.data.ArchonResult;
 import art.arcane.quill.Quill;
@@ -43,19 +44,12 @@ public class ArchonService extends QuillService {
         }
         try
         {
-            L.i("Starting Archon Server");
+            i("Initializing SQL Connections");
             initSQLConnections();
             edict = new Edict(this);
+            i("Online (" + readOnlySQLConnections.list().size() + " Read Only, " + writeSQLConnections.list().size() + " Writable)");
             L.flush();
-            L.i("============== Archon ==============");
-            L.i("SQL: ");
-            L.i("  Writers: ");
-            writeSQLConnections.list().forEach((i) -> L.i("    " + i.getName()));
-            L.i("  Readers: ");
-            readOnlySQLConnections.list().forEach((i) -> L.i("    " + i.getName()));
-            L.flush();
-            L.i("====================================");
-            L.flush();
+            Archon.defaultService = this;
         }
 
         catch(Throwable e)
@@ -115,18 +109,26 @@ public class ArchonService extends QuillService {
         KList<ArchonSQLConnection> write = new KList<>();
         for(ArchonSQLConfiguration i : conf)
         {
-            if(i.isReadOnly())
+            ArchonSQLConnection c = new ArchonSQLConnection(i);
+            c.connect();
+
+            if(c.isConnected())
             {
-                ArchonSQLConnection c = new ArchonSQLConnection(i);
-                c.connect();
-                readOnly.add(c);
+                i("Connected to DB " + c.getTag());
+                if(i.isReadOnly())
+                {
+                    readOnly.add(c);
+                }
+
+                else
+                {
+                    write.add(c);
+                }
             }
-            
+
             else
             {
-                ArchonSQLConnection c = new ArchonSQLConnection(i);
-                c.connect();
-                write.add(c);
+                Quill.crashStack(c.getTag() + " is somehow not connected after invoking connect(). This should not happen as we should have already crashed. See the stack trace below.");
             }
         }
         
