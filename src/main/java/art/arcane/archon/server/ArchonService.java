@@ -17,17 +17,11 @@ import lombok.EqualsAndHashCode;
 @Data
 public class ArchonService extends QuillService {
     private KList<ArchonSQLConfiguration> connections = KList.from(new ArchonSQLConfiguration());
-    private KSet<Class<? extends Element>> synchronization;
     private transient RoundRobin<ArchonSQLConnection> readOnlySQLConnections;
     private transient RoundRobin<ArchonSQLConnection> writeSQLConnections;
     private transient Edict edict;
 
     public ArchonService()
-    {
-
-    }
-
-    public static void fixClass(Class<?> v)
     {
 
     }
@@ -137,5 +131,10 @@ public class ArchonService extends QuillService {
         
         writeSQLConnections = write.roundRobin();
         readOnlySQLConnections = readOnly.roundRobin();
+    }
+
+    public static void fixClass(Class<?> v)
+    {
+
     }
 }

@@ -9,6 +9,7 @@ import art.arcane.quill.cache.AtomicCache;
 import art.arcane.quill.collections.ID;
 import art.arcane.quill.collections.KList;
 import art.arcane.quill.collections.KMap;
+import art.arcane.quill.collections.KSet;
 import art.arcane.quill.logging.L;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -25,6 +26,7 @@ import java.lang.reflect.Modifier;
 @Data
 public abstract class Element
 {
+    private static final KSet<Class<? extends Element>> synced = new KSet<>();
     private static boolean tableExists = false;
     private transient Boolean exists = null;
     private static final Gson gson = buildGson();
@@ -78,6 +80,12 @@ public abstract class Element
 
     private void enforceArchon()
     {
+        if(!synced.contains(getClass()))
+        {
+            synced.add(getClass());
+            sync();
+        }
+
         if(archon == null)
         {
             throw new NullPointerException("You must use setArchon() on this element to push or pull.");
