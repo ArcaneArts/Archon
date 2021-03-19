@@ -1,0 +1,10 @@
+{"database": {"connections": [{
+    "database": "archontest",
+    "password": "archontest",
+    "address": "localhost",
+    "driver": "com.mysql.cj.jdbc.Driver",
+    "port": 3306,
+    "readOnly": false,
+    "username": "archontest",
+    "usesPassword": true
+}]}}

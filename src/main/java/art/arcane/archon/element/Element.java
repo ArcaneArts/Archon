@@ -11,13 +11,13 @@ import art.arcane.quill.collections.KList;
 import art.arcane.quill.collections.KMap;
 import art.arcane.quill.collections.KSet;
 import art.arcane.quill.logging.L;
+import art.arcane.quill.random.RNG;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -27,6 +27,7 @@ import java.lang.reflect.Modifier;
 public abstract class Element
 {
     private static final KSet<Class<? extends Element>> synced = new KSet<>();
+    private static final KSet<Class<? extends Element>> syncedDone = new KSet<>();
     private static boolean tableExists = false;
     private transient Boolean exists = null;
     private static final Gson gson = buildGson();
@@ -34,8 +35,38 @@ public abstract class Element
     private static final KMap<Class<? extends Element>, AtomicCache<KList<ElementField>>> fieldMapping = new KMap<>();
     private transient final AtomicCache<ElementField> primaryKey = new AtomicCache<>();
     private transient Element snapshot = null;
+    private int dropRequest;
 
     public abstract String getTableName();
+
+    public int dropTableRequestCode()
+    {
+        dropRequest = RNG.r.imax();
+        return dropRequest;
+    }
+
+    public void bruteForceUnregister()
+    {
+        synced.remove(getClass());
+        syncedDone.remove(getClass());
+        fieldMapping.remove(getClass());
+    }
+
+    public boolean dropTable(int requestCode)
+    {
+        enforceArchon();
+
+        if(dropRequest == requestCode)
+        {
+            synced.remove(getClass());
+            syncedDone.remove(getClass());
+            fieldMapping.remove(getClass());
+            getArchon().update("DROP TABLE `" + getTableName() + "`;");
+            return true;
+        }
+
+        return false;
+    }
 
     public boolean pull()
     {
@@ -93,7 +124,8 @@ public abstract class Element
     }
 
     public boolean pull(ArchonResult r)
-    {enforceArchon();
+    {
+        enforceArchon();
         try
         {
             if(r.size() <= 0)
@@ -307,6 +339,11 @@ public abstract class Element
 
     public void sync()
     {
+        if(syncedDone.contains(getClass()))
+        {
+            return;
+        }
+
         enforceArchon();
         for(ElementField i : getFieldMapping()) {
             if (i.isReference()) {
@@ -381,6 +418,8 @@ public abstract class Element
             {
                 archon.update("ALTER TABLE `" + getTableName() + "` " + alt.toString(", ") + ";");
             }
+
+            syncedDone.add(getClass());
         }
 
         else

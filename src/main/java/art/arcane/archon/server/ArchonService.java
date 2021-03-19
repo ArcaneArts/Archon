@@ -21,11 +21,6 @@ public class ArchonService extends QuillService {
     private transient RoundRobin<ArchonSQLConnection> writeSQLConnections;
     private transient Edict edict;
 
-    public ArchonService()
-    {
-
-    }
-
     @Override
     public void onEnable() {
         try
@@ -101,6 +96,15 @@ public class ArchonService extends QuillService {
 
     private void initSQLConnections()
     {
+        if(Archon.forceConnection != null)
+        {
+            connections.clear();
+            w("I hope you know what you're doing by forcing SQL Connections through Archon...");
+            readOnlySQLConnections = new KList<ArchonSQLConnection>().roundRobin();
+            writeSQLConnections = KList.from(ArchonSQLConnection.wrap(Archon.forceConnection)).roundRobin();
+            return;
+        }
+
         KList<ArchonSQLConfiguration> conf = getConnections();
         KList<ArchonSQLConnection> readOnly = new KList<>();
         KList<ArchonSQLConnection> write = new KList<>();

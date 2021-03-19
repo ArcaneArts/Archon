@@ -77,11 +77,28 @@ public class ArchonResult
 
     public ArchonResultRow rowFromColumn(String name)
     {
-        return rowFromColumn(h.indexOf(name));
+        int v = h.indexOf(name);
+
+        if(v == -1)
+        {
+            v = h.indexOf(name.toLowerCase());
+
+            if(v == -1)
+            {
+                throw new RuntimeException("Cannot find column'" + name + "' in [" + h.toString(", ") + "] (also tried lower case)");
+            }
+        }
+
+        return rowFromColumn(v);
     }
 
     public ArchonResultRow rowFromColumn(int column)
     {
+        if(column < 0)
+        {
+            throw new RuntimeException("Cannot get a row for the column index " + column);
+        }
+
         KList<Object> o = new KList<>();
 
         for(int i = 0; i < size(); i++)

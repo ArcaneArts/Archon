@@ -13,19 +13,28 @@ import java.util.Properties;
 
 public class ArchonSQLConnection implements ArchonConnection {
     private static int creates = 1;
-
     private final String name;
-
     private boolean connected;
-
     private Connection sql;
     private transient final ArchonSQLConfiguration config;
+    private Connection forceConnection;
 
     public ArchonSQLConnection(ArchonSQLConfiguration config)
     {
         this.config = config;
         name = "sql:" + config.hashCode() + ":" + creates++;
         connected = false;
+    }
+
+    public static ArchonSQLConnection wrap(Connection forceConnection) {
+        ArchonSQLConnection a = new ArchonSQLConnection(new ArchonSQLConfiguration());
+        a.force(forceConnection);
+        a.connect();
+        return a;
+    }
+
+    private void force(Connection forceConnection) {
+        this.forceConnection = forceConnection;
     }
 
     @Override
@@ -41,6 +50,24 @@ public class ArchonSQLConnection implements ArchonConnection {
 
     @Override
     public void connect() {
+        if(forceConnection != null)
+        {
+            sql = forceConnection;
+
+            try {
+                if(sql.isValid(5))
+                {
+                    connected = true;
+                    return;
+                }
+            } catch (SQLException e) {
+                L.f("[" + getName() + "]: Database Connection Failure!");
+                L.ex(e);
+                Quill.crash("Failed to connect to database: (TEST EMBEDDED DB)"  + " (See error above)");
+            }
+            return;
+        }
+
         J.attempt(() -> Class.forName(config.getDriver()).newInstance());
         Properties p = new Properties();
         p.setProperty("user", config.getUsername());
@@ -64,7 +91,7 @@ public class ArchonSQLConnection implements ArchonConnection {
         } catch (Throwable e) {
             L.f("[" + getName() + "]: Database Connection Failure!");
             L.ex(e);
-            Quill.crashStack("Failed to connect to database: " + url + " (See error above)");
+            Quill.crash("Failed to connect to database: " + url + " (See error above)");
         }
 
         disconnect();
@@ -77,8 +104,8 @@ public class ArchonSQLConnection implements ArchonConnection {
             L.v("[SQL Query]: " + query + " -> " + res.toJSON());
             return res;
         } catch (SQLException throwables) {
-            throwables.printStackTrace();
-            L.v("[REQ?]: " + query);
+            L.ex(throwables);
+            Quill.crash("Failed to query with: " + query);
         }
 
         return null;
@@ -91,8 +118,8 @@ public class ArchonSQLConnection implements ArchonConnection {
             L.v("[SQL Update]: " + query + " -> " + v + " rows affected");
             return v;
         } catch (SQLException throwables) {
-            throwables.printStackTrace();
-            L.v("[REQ?]: " + query);
+            L.ex(throwables);
+            Quill.crash("Failed to update with: " + query);
         }
 
         return -1;
