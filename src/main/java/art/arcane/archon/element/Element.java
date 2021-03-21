@@ -23,6 +23,13 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+/**
+ * An element represents a table in SQL or other db mediums. Each field represents a column.
+ * Every element requires one @Identity annotated field using the ID class as it's type.
+ * You can use @Type to define a custom SQL type but it will assume that variable's type by
+ * default. You can also use Reference<AnotherElement> as references to other tables instead
+ * of just juggling ids.
+ */
 @Data
 public abstract class Element
 {
@@ -37,14 +44,28 @@ public abstract class Element
     private transient Element snapshot = null;
     private int dropRequest;
 
+    /**
+     * Get the name of the SQL table this element should be called
+     * @return simply the table name
+     */
     public abstract String getTableName();
 
+    /**
+     * Dropping tables is dangerous. This returns a random number and stores it in this
+     * instance. Use this code to drop the table if you choose to do so
+     * @return the drop code.
+     */
     public int dropTableRequestCode()
     {
         dropRequest = RNG.r.imax();
         return dropRequest;
     }
 
+    /**
+     * This is used if you want to force archon to re-validate this table, meaning
+     * Checking if the table exists, re-checking colums and altering the table to sync
+     * with this object's field mapping.
+     */
     public void bruteForceUnregister()
     {
         synced.remove(getClass());
@@ -52,6 +73,11 @@ public abstract class Element
         fieldMapping.remove(getClass());
     }
 
+    /**
+     * Drop the entire SQL table (WARNING)
+     * @param requestCode a random code generated with dropTableRequestCode()
+     * @return true if it succeeds
+     */
     public boolean dropTable(int requestCode)
     {
         enforceArchon();
@@ -68,6 +94,10 @@ public abstract class Element
         return false;
     }
 
+    /**
+     * Pull all of the fields from SQL that are on the same row as the IDENTITY field.
+     * @return true if it successfully pulled
+     */
     public boolean pull()
     {
         enforceArchon();
@@ -86,9 +116,27 @@ public abstract class Element
         return false;
     }
 
+    /**
+     * Returns an ID where FIELD is equal to VALUE
+     * @param field the field name as it appears in java
+     * @param value the value (dont use quotes)
+     * @return the ID or null if it cannot be found
+     */
     public ID getIdentityWhere(String field, String value)
     {
-        ArchonResult r = getArchon().getReadSQLConnection().query("SELECT `" + getPrimaryField().getSqlName() + "` FROM `"+getTableName()+"` WHERE `" + field + "` = '" + value + "' LIMIT 1;");
+        return getIdentityWhereRaw(field, "'" + value + "'");
+    }
+
+    /**
+     * Returns an ID where FIELD is equal to VALUE. This is the raw version,
+     * meaning you can use non quoted values such as numbers
+     * @param field the field name as it appears in java
+     * @param value the value if it's a string use 'single quotes'
+     * @return the ID or null if it cannot be found
+     */
+    public ID getIdentityWhereRaw(String field, String value)
+    {
+        ArchonResult r = getArchon().getReadSQLConnection().query("SELECT `" + getPrimaryField().getSqlName() + "` FROM `"+getTableName()+"` WHERE `" + field + "` = " + value + " LIMIT 1;");
 
         if(r.size() > 0)
         {
@@ -98,11 +146,37 @@ public abstract class Element
         return null;
     }
 
-    public boolean where(String field, String value)
+    /**
+     * Pulls this instance where a field is equal to a value
+     * (raw) so use 'single quotes' for strings
+     * @param field the field name as it appears in java
+     * @param value the raw value, use 'single quotes' if it's a string
+     * @return true if this instance's fields were populated with a row that
+     * matched your condition
+     */
+    public boolean whereRaw(String field, String value)
     {
-        return pull(getArchon().getReadSQLConnection().query("SELECT * FROM `"+getTableName()+"` WHERE `" + field + "` = '" + value + "' LIMIT 1;"));
+        return pull(getArchon().getReadSQLConnection().query("SELECT * FROM `"+getTableName()+"` WHERE `" + field + "` = " + value + " LIMIT 1;"));
     }
 
+    /**
+     * Pulls this instance where a field is equal to a value assumes single quotes
+     * @param field the field name as it appears in java
+     * @param value the value. use whereRaw for numbers (non strings)
+     * @return true if this instance's fields were populated with a row that
+     * matched your condition
+     */
+    public boolean where(String field, String value)
+    {
+        return whereRaw(field, "'" + value + "'");
+    }
+
+    /**
+     * Builder method to apply archon service to this instance
+     * @param a the archon service
+     * @param <T> this type
+     * @return this (builder)
+     */
     public <T extends Element> T archon(ArchonService a)
     {
         setArchon(a);
@@ -123,6 +197,11 @@ public abstract class Element
         }
     }
 
+    /**
+     * Pull all the data from an archon result. Assumes the first row in the archon result
+     * @param r the archon result
+     * @return true if it managed to pull information into this instance from the result
+     */
     public boolean pull(ArchonResult r)
     {
         enforceArchon();
@@ -144,6 +223,12 @@ public abstract class Element
         return false;
     }
 
+    /**
+     * Pulls a specific row from an archon result
+     * @param r the result
+     * @param row the result's row reference
+     * @return true if it pulled information otherwise false
+     */
     public boolean pull(ArchonResult r, ArchonResultRow row)
     {enforceArchon();
         try
@@ -180,11 +265,27 @@ public abstract class Element
         return false;
     }
 
+    /**
+     * Pushes information back to SQL. If it has already pulled then
+     * it will only push values that have changed. If you want to force it,
+     * use push(true) to force it.
+     * @param <T> this type (builder return)
+     * @return this (builder return)
+     */
     public <T extends Element> T push()
     {enforceArchon();
         return push(false);
     }
 
+    /**
+     * Pushes information back to SQL. If it has already pulled then
+     * it will only push values that have changed. If you want to force it,
+     * use push(true) to force it.
+     * @param forcePush should we force push, meaning ignore what has and has not changed
+     *                  and just set every column in the row
+     * @param <T> this type (builder return)
+     * @return this (builder return)
+     */
     public <T extends Element> T push(boolean forcePush)
     {enforceArchon();
         if(getPrimaryValue() == null)
@@ -267,6 +368,12 @@ public abstract class Element
         snapshot.setArchon(getArchon());
     }
 
+    /**
+     * Return an element list that contains elements where the given condition is met
+     * @param where the condition (SQL)
+     * @param <T> this type (builder return)
+     * @return this (builder return)
+     */
     public <T extends Element> ElementList<T> allWhere(String where)
     {
         enforceArchon();
@@ -274,11 +381,28 @@ public abstract class Element
         return (ElementList<T>) ElementList.where(getArchon(), getClass(), where);
     }
 
+    /**
+     * Get all where (in an element list) the condition is met,
+     * along with an order by field (assumes ascending)
+     * @param where the where condition
+     * @param orderBy the field to sort by (assumes ascending)
+     * @param <T> this type (builder return)
+     * @return this (builder return)
+     */
     public <T extends Element> ElementList<T> allWhere(String where, String orderBy)
     {
         return allWhere(where, orderBy, true);
     }
 
+    /**
+     * Get all where (in an element list) the condition is met,
+     * along with an order by field
+     * @param where the where condition
+     * @param orderBy the field to sort by
+     * @param ascending ascending? or decending (sort)
+     * @param <T> this type (builder return)
+     * @return this (builder return)
+     */
     public <T extends Element> ElementList<T> allWhere(String where, String orderBy, boolean ascending)
     {
         enforceArchon();
@@ -286,6 +410,11 @@ public abstract class Element
         return (ElementList<T>) ElementList.where(getArchon(), getClass(), where, orderBy, ascending);
     }
 
+    /**
+     * Delete this representation of a row in SQL. Only uses the IDENTITY field to
+     * figure out which row to delete. ONLY DELETES ONE
+     * @return true if one was deleted otherwise false.
+     */
     public boolean delete()
     {enforceArchon();
         sync();
@@ -295,6 +424,12 @@ public abstract class Element
         return c > 0;
     }
 
+    /**
+     * Check if this instance reference to an SQL row actually exists in SQL
+     * Only checks the IDENTITY field to verify
+     * @return true if a row in SQL has an ID that matches
+     * this object's ID (IDENTITY)
+     */
     public boolean exists()
     {enforceArchon();
         if(getPrimaryValue() == null)
@@ -312,6 +447,10 @@ public abstract class Element
         return exists;
     }
 
+    /**
+     * Get the primary value in string (the field with @Identity on it)
+     * @return the primary ID of this row
+     */
     public String getPrimaryValue()
     {
         try {
@@ -323,6 +462,10 @@ public abstract class Element
         return null;
     }
 
+    /**
+     * Get the element field instance of this IDENTITY field
+     * @return the element field
+     */
     public ElementField getPrimaryField()
     {
         return primaryKey.aquire(() -> {
@@ -338,6 +481,10 @@ public abstract class Element
         });
     }
 
+    /**
+     * Synchronize this table with SQL (java is the overriding party here)
+     * ALTER TABLE / CREATE TABLE IF NOT EXISTS will be used here. (cached)
+     */
     public void sync()
     {
         if(syncedDone.contains(getClass()))
@@ -430,6 +577,10 @@ public abstract class Element
         }
     }
 
+    /**
+     * Get the count of rows in this table
+     * @return the row count
+     */
     public long tableSize()
     {enforceArchon();
         sync();
@@ -507,6 +658,10 @@ public abstract class Element
         return defaultValue;
     }
 
+    /**
+     * Get the field mapping for this table
+     * @return the field mapping
+     */
     public KList<ElementField> getFieldMapping()
     {
         Class<? extends Element> baseClass = getClass();
@@ -538,7 +693,6 @@ public abstract class Element
             return map;
         });
     }
-
 
     private static Gson buildGson() {
         return new GsonBuilder()
