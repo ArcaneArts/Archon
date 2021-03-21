@@ -349,7 +349,14 @@ public abstract class Element {
         } else {
             archon.update("INSERT INTO `" + getTableName() + "` (" + getFieldMapping().convert(ElementField::getSqlName).toString(", ") + ") VALUES (" + getFieldMapping().convert((i) -> {
                 try {
-                    return "'" + ElementUtil.escapeString(boolsafe(i.getField().get(Element.this)).toString(), true) + "'";
+                    Object val = i.getField().get(Element.this);
+
+                    if(val == null)
+                    {
+                        L.f(i.getField().getName() + " is null in " + getClass().getCanonicalName());
+                    }
+
+                    return "'" + ElementUtil.escapeString(boolsafe(val).toString(), true) + "'";
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
