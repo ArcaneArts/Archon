@@ -88,7 +88,7 @@ public abstract class Element
 
     public ID getIdentityWhere(String field, String value)
     {
-        ArchonResult r = getArchon().getReadSQLConnection().query("SELECT `" + getPrimaryField().getSqlName() + "` WHERE `" + field + "` = '" + value + "' LIMIT 1;");
+        ArchonResult r = getArchon().getReadSQLConnection().query("SELECT `" + getPrimaryField().getSqlName() + "` FROM `"+getTableName()+"` WHERE `" + field + "` = '" + value + "' LIMIT 1;");
 
         if(r.size() > 0)
         {
@@ -100,7 +100,7 @@ public abstract class Element
 
     public boolean where(String field, String value)
     {
-        return pull(getArchon().getReadSQLConnection().query("SELECT * WHERE `" + field + "` = '" + value + "' LIMIT 1;"));
+        return pull(getArchon().getReadSQLConnection().query("SELECT * FROM `"+getTableName()+"` WHERE `" + field + "` = '" + value + "' LIMIT 1;"));
     }
 
     public <T extends Element> T archon(ArchonService a)
@@ -180,16 +180,16 @@ public abstract class Element
         return false;
     }
 
-    public void push()
+    public <T extends Element> T push()
     {enforceArchon();
-        push(false);
+        return push(false);
     }
 
-    public void push(boolean forcePush)
+    public <T extends Element> T push(boolean forcePush)
     {enforceArchon();
         if(getPrimaryValue() == null)
         {
-            return;
+            return null;
         }
 
         if(exists())
@@ -227,7 +227,7 @@ public abstract class Element
                     }).toString(", ") + " WHERE `" + getPrimaryField().getSqlName() + "` = '" + getPrimaryValue() + "' LIMIT 1;");
 
                     takeSnapshot();
-                    return;
+                    return (T) this;
                 }
             }
 
@@ -258,6 +258,7 @@ public abstract class Element
         }
 
         takeSnapshot();
+        return (T) this;
     }
 
     private void takeSnapshot()
@@ -355,13 +356,13 @@ public abstract class Element
 
                     if (o == null) {
                         L.v("Initialized Reference");
-                        f.set(this, Reference.class.getConstructor(Element.class, Class.class).newInstance(this, f.getDeclaredAnnotation(ReferenceType.class).value()));
+                        f.set(this, Reference.class.getConstructor(Class.class).newInstance(f.getDeclaredAnnotation(ReferenceType.class).value()));
                     }
 
-                    else if(o.getClass() == null || o.getParent() == null)
+                    else if(o.getClass() == null)
                     {
                         L.v("Repaired Reference");
-                        f.set(this, Reference.class.getConstructor(Element.class, Class.class, ID.class).newInstance(this, f.getDeclaredAnnotation(ReferenceType.class).value(), o.getId()));
+                        f.set(this, Reference.class.getConstructor(Class.class, ID.class).newInstance(f.getDeclaredAnnotation(ReferenceType.class).value(), o.getId()));
                     }
                 } catch (Throwable e) {
                     L.ex(e);
@@ -549,7 +550,7 @@ public abstract class Element
 
                     @Override
                     public Reference<?> read(JsonReader in) throws IOException {
-                        return new Reference<>(null, null, ID.fromString(in.nextString()));
+                        return new Reference<>(null, ID.fromString(in.nextString()));
                     }
                 })
 

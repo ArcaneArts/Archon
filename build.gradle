@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'art.arcane'
-version '1.1.5'
+version '1.1.6'
 
 repositories {
     mavenCentral()
@@ -13,17 +13,22 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.ArcaneArts:Quill:1.1.5'
+    implementation 'com.github.ArcaneArts:Quill:1.1.6'
     compileOnly 'org.projectlombok:lombok:1.18.12'
     annotationProcessor 'org.projectlombok:lombok:1.18.12'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'mysql:mysql-connector-java:8.0.21'
     implementation 'com.github.ben-manes.caffeine:caffeine:2.8.5'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
     testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j-springboot:2.4.0'
 }
 
 test {
     useJUnitPlatform()
+    testLogging.showStandardStreams = true
+
+    testLogging {
+        showStandardStreams = true
+    }
 }
