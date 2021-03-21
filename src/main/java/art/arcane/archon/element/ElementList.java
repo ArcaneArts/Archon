@@ -82,13 +82,13 @@ public abstract class ElementList<T extends Element> {
             @Override
             public ArchonResult getResult(int offset, int limit) {
                 String tn = ElementUtil.getTableName(type);
-                return getArchon().query("SELECT `" + fieldResult + "` FROM `" + tn + "` WHERE " + where + " LIMIT " + offset + "," + limit + ";");
+                return getArchon().query("SELECT `" + fieldResult + "` FROM `" + tn + "` WHERE `" + where + "` = " + fieldResult + " LIMIT " + offset + "," + limit + ";");
             }
 
             @Override
             public long getSize() {
                 String tn = ElementUtil.getTableName(type);
-                return getArchon().query("SELECT COUNT(*) FROM `" + tn + "` WHERE " + where + ";").getRow(0).getLong(0);
+                return getArchon().query("SELECT COUNT(*) FROM `" + tn + "` WHERE `" + where + "` = " + fieldResult +  ";").getRow(0).getLong(0);
             }
         };
     }
@@ -133,13 +133,13 @@ public abstract class ElementList<T extends Element> {
             @Override
             public ArchonResult getResult(int offset, int limit) {
                 String tn = ElementUtil.getTableName(type);
-                return getArchon().query("SELECT `" + fieldResult + "` FROM `" + tn + "` WHERE " + where + " ORDER BY `" + orderBy + "` " + (ascending ? "ASC" : "DESC") + " LIMIT " + offset + "," + limit + ";");
+                return getArchon().query("SELECT `" + fieldResult + "` FROM `" + tn + "` WHERE `" + where + "` = " + fieldResult + " ORDER BY `" + orderBy + "` " + (ascending ? "ASC" : "DESC") + " LIMIT " + offset + "," + limit + ";");
             }
 
             @Override
             public long getSize() {
                 String tn = ElementUtil.getTableName(type);
-                return getArchon().query("SELECT COUNT(*) FROM `" + tn + "` WHERE " + where + ";").getRow(0).getLong(0);
+                return getArchon().query("SELECT COUNT(*) FROM `" + tn + "` WHERE `" + where + "` = " + fieldResult + ";").getRow(0).getLong(0);
             }
         };
     }
