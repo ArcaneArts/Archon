@@ -7,27 +7,23 @@ import java.lang.reflect.Field;
 
 @Data
 public class Reference<T extends Element> {
-    private final transient Element parent;
     private final Class<? extends Element> type;
     private ID id;
 
-    public Reference(Element parent, T t)
+    public Reference(T t)
     {
-        this.parent = parent;
         id = ID.fromString(t.getPrimaryValue());
         type = t.getClass();
     }
 
-    public Reference(Element parent,  Class<? extends T> c, ID id)
+    public Reference(Class<? extends T> c, ID id)
     {
-        this.parent = parent;
         this.id = ID.fromString(id.toString());
         type = c;
     }
 
-    public Reference(Element parent, Class<? extends T> c)
+    public Reference(Class<? extends T> c)
     {
-        this.parent = parent;
         this.id = null;
         type = c;
     }
@@ -42,11 +38,29 @@ public class Reference<T extends Element> {
         return id.toString();
     }
 
+    /**
+     * Simply sets the id of this element's reference to the specified element's identity id does not push anything.
+     * @param t the referenced (child) element to set in this element's reference
+     */
     public void set(T t)
     {
         id = ID.fromString(t.getPrimaryValue());
     }
 
+    /**
+     * Commit will set the id and push both the parent (reference holder) and the child (the referebced)
+     * @param t the referenced (child) element to set in this element's reference
+     */
+    public void commit(T t)
+    {
+        id = ID.fromString(t.getPrimaryValue());
+        t.push();
+    }
+
+    /**
+     * Get (create/pull) the child object if there is one, otherwise null
+     * @return the element
+     */
     public T get()
     {
         try {
