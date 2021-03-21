@@ -1,4 +1,4 @@
-package art.arcane.archon;
+package art.arcane.archon.table;
 
 import art.arcane.archon.element.Element;
 import art.arcane.archon.element.Identity;
@@ -11,17 +11,28 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class AlterOne extends Element {
+public class ExampleUser2 extends Element {
     @Builder.Default
     @Identity
     private ID id = new ID();
 
+    @Type("VARCHAR(128)")
+    @Builder.Default
+    private String email = "someone@something.at";
+
     @Type("VARCHAR(64)")
     @Builder.Default
-    private String value = "default";
+    private String firstName = "Mills";
+
+    @Type("VARCHAR(64)")
+    @Builder.Default
+    private String lastName = "Mills";
+
+    @Builder.Default
+    private int someId = 0;
 
     @Override
     public String getTableName() {
-        return "altertest";
+        return "exampleuser2";
     }
 }

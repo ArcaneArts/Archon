@@ -1,4 +1,4 @@
-package art.arcane.archon;
+package art.arcane.archon.table;
 
 import art.arcane.archon.element.Element;
 import art.arcane.archon.element.Identity;
@@ -11,19 +11,25 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class RandomTableObject extends Element {
-    private final ID tableID = new ID();
-
+public class ChildRefTest extends Element {
     @Builder.Default
     @Identity
     private ID id = new ID();
 
+    @Type("VARCHAR(128)")
+    @Builder.Default
+    private String password = "12345";
+
     @Type("VARCHAR(64)")
     @Builder.Default
-    private String value = "default";
+    private String salt = "data";
+
+    @Type("VARCHAR(64)")
+    @Builder.Default
+    private String pepper = "data";
 
     @Override
     public String getTableName() {
-        return tableID.toString();
+        return "childreftest";
     }
 }
