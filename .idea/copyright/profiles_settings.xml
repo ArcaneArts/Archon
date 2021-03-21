@@ -1,0 +1,8 @@
+<component name="CopyrightManager">
+  <settings default="Archon">
+    <module2copyright>
+      <element module="Production" copyright="Archon" />
+      <element module="Tests" copyright="Archon" />
+    </module2copyright>
+  </settings>
+</component>
